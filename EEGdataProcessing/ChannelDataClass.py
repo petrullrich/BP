@@ -20,9 +20,9 @@ class channelData:
         # list s fetaures timestampy
         self.timestamps = []
 
-        channelData.load_json(self)
+        channelData.load_json_features(self)
 
-    def load_json(self):
+    def load_json_features(self):
 
         firstTimestamp = None
         samplescount = [0]  # poctet vzorku - tzn. [1,2,3,4, ... ,n]
@@ -61,6 +61,4 @@ class channelData:
 
         print(self.timestamps)
         print(*self.data, sep = "\n")
-
-
 
