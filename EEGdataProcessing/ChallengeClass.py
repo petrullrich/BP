@@ -69,7 +69,6 @@ class challange:
                 # ----------------------------------------------------------------
                 # vytvoreni dict s id challange + zacatky a konce danych challengi
 
-
                 challengeRange[0].append(timestamp)
 
                 if len(challengeRange[0]) != 2:
@@ -116,6 +115,9 @@ class challange:
         print(self.challenges)
         print(challenges)
 
+        # ------------------------------------------
+        # test dic and list
+
         list = [[]]
         list[0][len(list[0]):] = 'f'
         list[0][len(list[0]):] = 's'
@@ -130,4 +132,49 @@ class challange:
         #list[0][0] = list[0][1]
         #del list[0][1]
         list[0].pop(0)
+        # ------------------------------------------
         print(dic)
+
+    # vrati offset a delku pro kazdou konkretni challenge v ramci sady challengi
+    def get_challange(self, challengeType, featuresTimestamps):
+
+        challengeNumber = 0
+        challengesAttributes = []
+
+        for currentChallenge in self.challenges[challengeType]:
+
+            print("CCH: ",currentChallenge)
+            print(featuresTimestamps)
+
+            offsetBool = True
+            challengeAttributes = []
+            offset = 1
+
+            for featuresTimestamp in featuresTimestamps:
+
+                if(bool(offsetBool)):
+                    if float(currentChallenge[0]) <= float(featuresTimestamp):
+                        challengeAttributes.append(offset)
+                        offsetBool = False
+                else:
+                    if float(currentChallenge[1]) <= float(featuresTimestamp):
+                        challengeAttributes.append(offset - challengeAttributes[0])
+                        break
+
+                offset += 1
+            
+            # pokud existuje pocatecni timestamp pro danou challange, ale koncovy ne, doplni se jako koncovy posledni timestamp
+            if len(challengeAttributes) == 1:
+                challengeAttributes.append(featuresTimestamp)
+
+            challengesAttributes.append(copy.deepcopy(challengeAttributes))
+            print("OFFSET AND LENGTH: ",challengeAttributes)
+            challengeNumber += 1
+
+        print('timestamp 0: ', featuresTimestamps[0])
+        print('timestamp 0+823: ', featuresTimestamps[0 + 824])
+        print('timestamp 3813: ', featuresTimestamps[3813])
+        print('timestamp 3813+1109: ', featuresTimestamps[3813+1109])
+        print(challengesAttributes)
+
+        return challengesAttributes
