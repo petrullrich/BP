@@ -6,6 +6,7 @@ from scipy import signal
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import json
+import copy
 
 class channelData:
 
@@ -24,6 +25,10 @@ class channelData:
         self.data = []
         # list s fetaures timestampy
         self.timestamps = []
+        # list listu - vstup do neuronove site (features)
+        self.dataForNN = []
+        # list listu - vstup do neur. s. (labels)
+        self.labelsForNN = []
 
         channelData.load_json_features(self)
 
@@ -86,22 +91,50 @@ class channelData:
     # challengeType - typ challenge, pro kterou funkci volame -
     # TODO - challengeType vyuzit pro prirazeni typu challenge do druheho pole -- vytvorit toto pole
     # TODO - pro kazdy index tohoto pole sedi index framu z dane challenge
-    def processData(self, challengesAttributes, challengeType):
+    def processData(self, challengesAttributes, challengeType, channelsCount):
 
         # pro kazdou challenge
         for challengeAttr in challengesAttributes:
-            currentPosition = challengeAttr[0]
-            dataInFrame = []
+            if(len(challengeAttr) == 0):
+                break
+            currentPosition = challengeAttr[0] # dosazeni offsetu dane challenge do aktualni pozice
+
             while(currentPosition < (challengeAttr[0] + challengeAttr[1])):
                 # TODO - dokud nejsme na konci challenge, brat vzdy jeden frame ->
                 # TODO -> s nim pracovat (s daty v current framu)
-                for i in range(currentPosition, currentPosition+self.frameLength):
-                    dataInFrame.append(self.data[i])
+                allChannelsDataInFrame = [] # promenna pro list s jiz upravenym ramcem,v kterem jsou vsechny kanaly poskladane za sebou
 
-                # TODO - zkontrolovat dataInFrame - dale udelat potrebne operace s daty -> data dat do pole poli
-                # TODO - k nim prislusny challengeType (do druheho pole poli resp. list listu)
+                for channelNumber in range(channelsCount):
+                    # inicializace konkretniho ramce
+                    dataInFrame = self.data[channelNumber][currentPosition : (currentPosition+self.frameLength)]
+                    # zpracovani konkretniho ramce na konkretnim kanalu
+                    dataInFrame = channelData.processFrame(self, dataInFrame)
+                    allChannelsDataInFrame = allChannelsDataInFrame + dataInFrame
+
+                    # TODO - zkontrolovat dataInFrame - dale udelat potrebne operace s daty -> data dat do pole poli
+                    # TODO - k nim prislusny challengeType (do druheho pole poli resp. list listu)
+                # doplneni vstupnich dat pro NN
+                self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
+                # doplneni labelu pro NN
+                self.labelsForNN.append(int(challengeType))
+                #print('allChannelsDataInFrame: ', allChannelsDataInFrame)
+                #print(len(allChannelsDataInFrame))
 
                 currentPosition += self.frameShift  # posunuti framu o shift
 
-    def getFrame(self, offset, length):
-        print()
+            print(self.dataForNN)
+            #print(*self.dataForNN, sep="\n")
+            print(len(self.dataForNN))
+            print(self.labelsForNN)
+            print(len(self.labelsForNN))
+    # zpracovani daneho ramce:
+    # fourierova transformace -> zahozeni druhe poloviny dat -> absolutni hodnota
+    # vraci jiz upraveny ramec
+    def processFrame(self, dataInFrame):
+        # print('Before FFT: ', dataInFrame)
+        dataInFrame = np.fft.fft(dataInFrame) # FFT
+        #print('After FFT: ', dataInFrame)
+        dataInFrame = dataInFrame[0 : int(self.frameLength/2)] # potrebujeme pouze prvni polovinu hodnot - argumenty zahodime
+        dataInFrame = list(map(abs, dataInFrame)) # kazde cislo prevedeno na absolutni hodnotu
+        # print('AFTER ABS: ', dataInFrame)
+        return dataInFrame

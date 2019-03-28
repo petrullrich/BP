@@ -74,20 +74,20 @@ class challange:
                 if len(challengeRange[0]) != 2:
                     break
 
-                print("Ch1: ", challenges)
+                # print("Ch1: ", challenges)
 
                 # pokud klic neexistuje, vytvori se list pro dany klic
                 if not lastKey in challenges:
                     challenges[lastKey] = []
 
-                print("ChallengeRange: ", challengeRange)
+                # print("ChallengeRange: ", challengeRange)
                 challenges[lastKey][len(challenges[lastKey]):] = copy.deepcopy(challengeRange)
-                print("Ch2: ", challenges)
+                # print("Ch2: ", challenges)
                 lastKey = str(values[0]) + str(values[1])
-                print('Lastkey: ', lastKey)
+                # print('Lastkey: ', lastKey)
                 challengeRange[0].pop(0)
-                print("ChallengeRange2: ", challengeRange)
-                print("Ch3: ", challenges)
+                # print("ChallengeRange2: ", challengeRange)
+                # print("Ch3: ", challenges)
                 #print(challenges)
                 # ----------------------------------------------------------------
 
@@ -112,28 +112,7 @@ class challange:
         challenges[lastKey] = []
         challenges[lastKey][len(challenges[lastKey]):] = challengeRange
         self.challenges = challenges
-        print(self.challenges)
-        print(challenges)
-
-        # ------------------------------------------
-        # test dic and list
-
-        list = [[]]
-        list[0][len(list[0]):] = 'f'
-        list[0][len(list[0]):] = 's'
-        print(list[0])
-        dic = {}
-        dic[0] = []
-        #dic[0].append(list)
-       # dic[0].append(list)
-
-        dic[0][len(dic[0]):] = copy.deepcopy(list)
-        dic[0][len(dic[0]):] = list[:]
-        #list[0][0] = list[0][1]
-        #del list[0][1]
-        list[0].pop(0)
-        # ------------------------------------------
-        print(dic)
+        print('Challenges: ', self.challenges)
 
     # vrati offset a delku pro kazdou konkretni challenge v ramci sady challengi
     def get_challange(self, challengeType, featuresTimestamps):
@@ -143,9 +122,6 @@ class challange:
 
         for currentChallenge in self.challenges[challengeType]:
 
-            print("CCH: ",currentChallenge)
-            print(featuresTimestamps)
-
             offsetBool = True
             challengeAttributes = []
             offset = 1
@@ -154,7 +130,7 @@ class challange:
 
                 if(bool(offsetBool)):
                     if float(currentChallenge[0]) <= float(featuresTimestamp):
-                        challengeAttributes.append(offset)
+                        challengeAttributes.append(offset-1)
                         offsetBool = False
                 else:
                     if float(currentChallenge[1]) <= float(featuresTimestamp):
@@ -168,11 +144,11 @@ class challange:
                 challengeAttributes.append(featuresTimestamp)
 
             challengesAttributes.append(copy.deepcopy(challengeAttributes))
-            print("OFFSET AND LENGTH: ",challengeAttributes)
+            # print("OFFSET AND LENGTH: ",challengeAttributes)
             challengeNumber += 1
 
         print('timestamp 0: ', featuresTimestamps[0])
-        print('timestamp 0+823: ', featuresTimestamps[0 + 824])
+        print('timestamp 0+824: ', featuresTimestamps[0 + 824])
         print('timestamp 3813: ', featuresTimestamps[3813])
         print('timestamp 3813+1109: ', featuresTimestamps[3813+1109])
         print(challengesAttributes)
