@@ -89,8 +89,6 @@ class channelData:
 
     # challengesAttributes - list listu -> prvni hodnota je offset od zacatku dat, druha hodnota je delka challenge
     # challengeType - typ challenge, pro kterou funkci volame -
-    # TODO - challengeType vyuzit pro prirazeni typu challenge do druheho pole -- vytvorit toto pole
-    # TODO - pro kazdy index tohoto pole sedi index framu z dane challenge
     def processData(self, challengesAttributes, challengeType, channelsCount):
 
         # pro kazdou challenge
@@ -98,10 +96,7 @@ class channelData:
             if(len(challengeAttr) == 0):
                 break
             currentPosition = challengeAttr[0] # dosazeni offsetu dane challenge do aktualni pozice
-
-            while(currentPosition < (challengeAttr[0] + challengeAttr[1])):
-                # TODO - dokud nejsme na konci challenge, brat vzdy jeden frame ->
-                # TODO -> s nim pracovat (s daty v current framu)
+            while(currentPosition + self.frameLength < (challengeAttr[0] + challengeAttr[1])):
                 allChannelsDataInFrame = [] # promenna pro list s jiz upravenym ramcem,v kterem jsou vsechny kanaly poskladane za sebou
 
                 for channelNumber in range(channelsCount):
@@ -110,13 +105,17 @@ class channelData:
                     # zpracovani konkretniho ramce na konkretnim kanalu
                     dataInFrame = channelData.processFrame(self, dataInFrame)
                     allChannelsDataInFrame = allChannelsDataInFrame + dataInFrame
+                    #print('allChannelsDataInFrame(before np): ', allChannelsDataInFrame)
+                    #allChannelsDataInFrame = np.array(allChannelsDataInFrame)
+                    #print('allChannelsDataInFrame(after np): ', allChannelsDataInFrame)
 
-                    # TODO - zkontrolovat dataInFrame - dale udelat potrebne operace s daty -> data dat do pole poli
-                    # TODO - k nim prislusny challengeType (do druheho pole poli resp. list listu)
                 # doplneni vstupnich dat pro NN
                 self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
+                #challengeType = np.array(challengeType)
+
                 # doplneni labelu pro NN
-                self.labelsForNN.append(int(challengeType))
+                self.labelsForNN.append(copy.deepcopy(challengeType))
+
                 #print('allChannelsDataInFrame: ', allChannelsDataInFrame)
                 #print(len(allChannelsDataInFrame))
 

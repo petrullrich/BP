@@ -119,38 +119,53 @@ class challange:
 
         challengeNumber = 0
         challengesAttributes = []
+        try:
+            # pokud je s danym klicem vice nez jedna challenge -> provedeme pro kazdou
+            for currentChallenge in self.challenges[challengeType]:
 
-        for currentChallenge in self.challenges[challengeType]:
+                offsetBool = True
+                challengeAttributes = []
+                offset = 1
 
-            offsetBool = True
-            challengeAttributes = []
-            offset = 1
+                # kontrolujeme kazdy timestampv poli timestampu
+                for featuresTimestamp in featuresTimestamps:
 
-            for featuresTimestamp in featuresTimestamps:
+                    if(bool(offsetBool)):
+                        # pokud je pocatecni timestamp dane challenge mensi/roven aktualne prochazenemu timestampu (z features) ->
+                        # zapiseme si cislo prochazeneho timestampu (promenna offset) (pocet vzorku od zacatku souboru)
 
-                if(bool(offsetBool)):
-                    if float(currentChallenge[0]) <= float(featuresTimestamp):
-                        challengeAttributes.append(offset-1)
-                        offsetBool = False
-                else:
-                    if float(currentChallenge[1]) <= float(featuresTimestamp):
-                        challengeAttributes.append(offset - challengeAttributes[0])
-                        break
+                        # offsetBool prepneme na False a dale se zjistuje delka dane challenge
+                        if float(currentChallenge[0]) <= float(featuresTimestamp):
+                            challengeAttributes.append(offset-1)
+                            offsetBool = False
+                    else:
+                        # zjistovani delky challenge
+                        # ve chvili, kdy je koncovy timestamp mensi/roven aktualne prochazenemu timestampu (z features) ->
+                        # zapiseme delku challenge
+                        if float(currentChallenge[1]) <= float(featuresTimestamp):
+                            challengeAttributes.append(offset - challengeAttributes[0])
+                            break
 
-                offset += 1
-            
-            # pokud existuje pocatecni timestamp pro danou challange, ale koncovy ne, doplni se jako koncovy posledni timestamp
-            if len(challengeAttributes) == 1:
-                challengeAttributes.append(featuresTimestamp)
+                    offset += 1
 
-            challengesAttributes.append(copy.deepcopy(challengeAttributes))
-            # print("OFFSET AND LENGTH: ",challengeAttributes)
-            challengeNumber += 1
+                # pokud existuje pocatecni timestamp pro danou challange, ale koncovy ne, doplni se jako koncovy posledni timestamp
+                if len(challengeAttributes) == 1:
+                    print('Celkovy pocet timestampu (features): ', len(featuresTimestamps))
+                    print('Offset: ', challengeAttributes[0])
+                    challengeAttributes.append(len(featuresTimestamps) - challengeAttributes[0])
 
-        print('timestamp 0: ', featuresTimestamps[0])
-        print('timestamp 0+824: ', featuresTimestamps[0 + 824])
-        print('timestamp 3813: ', featuresTimestamps[3813])
-        print('timestamp 3813+1109: ', featuresTimestamps[3813+1109])
-        print(challengesAttributes)
+                challengesAttributes.append(copy.deepcopy(challengeAttributes))
+                # print("OFFSET AND LENGTH: ",challengeAttributes)
+                challengeNumber += 1
 
-        return challengesAttributes
+            print('timestamp 0: ', featuresTimestamps[0])
+            print('timestamp 0+824: ', featuresTimestamps[0 + 824])
+            print('timestamp 3813: ', featuresTimestamps[3813])
+            print('timestamp 3813+1109: ', featuresTimestamps[3813+1109])
+            print("ChallengesAttributes: ", challengesAttributes)
+
+            return challengesAttributes
+
+        except KeyError:
+            print('Pro tuto sadu challengi neexistuji data')
+            exit(0)
