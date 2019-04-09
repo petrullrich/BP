@@ -32,6 +32,7 @@ class channelData:
 
         channelData.load_json_features(self)
 
+    # vola se pri vytvoreni instance tridy
     def load_json_features(self):
 
         firstTimestamp = None
