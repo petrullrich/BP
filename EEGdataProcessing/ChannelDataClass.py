@@ -30,6 +30,12 @@ class channelData:
         # list listu - vstup do neur. s. (labels)
         self.labelsForNN = []
 
+        # list listu - vstup do neuronove site (features) - TESTOVACI
+        self.testingDataForNN = []
+        # list listu - vstup do neur. s. (labels) - TESTOVACI
+        self.testingLabelsForNN = []
+
+
         channelData.load_json_features(self)
 
     # vola se pri vytvoreni instance tridy
@@ -90,7 +96,8 @@ class channelData:
 
     # challengesAttributes - list listu -> prvni hodnota je offset od zacatku dat, druha hodnota je delka challenge
     # challengeType - typ challenge, pro kterou funkci volame -
-    def processData(self, challengesAttributes, challengeType, channelsCount):
+    # dataType - testovaci nebo trenovaci data
+    def processData(self, challengesAttributes, challengeType, channelsCount, dataType):
 
         # pro kazdou challenge
         for challengeAttr in challengesAttributes:
@@ -111,11 +118,16 @@ class channelData:
                     #print('allChannelsDataInFrame(after np): ', allChannelsDataInFrame)
 
                 # doplneni vstupnich dat pro NN
-                self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
-                #challengeType = np.array(challengeType)
+                if(dataType == 'training'):
+                    self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
+                else:
+                    self.testingDataForNN.append(copy.deepcopy(allChannelsDataInFrame))
 
                 # doplneni labelu pro NN
-                self.labelsForNN.append(copy.deepcopy(challengeType))
+                if (dataType == 'training'):
+                    self.labelsForNN.append(copy.deepcopy(challengeType))
+                else:
+                    self.testingLabelsForNN.append(copy.deepcopy(challengeType))
 
                 #print('allChannelsDataInFrame: ', allChannelsDataInFrame)
                 #print(len(allChannelsDataInFrame))
@@ -127,6 +139,7 @@ class channelData:
             print(len(self.dataForNN))
             print(self.labelsForNN)
             print(len(self.labelsForNN))
+
     # zpracovani daneho ramce:
     # fourierova transformace -> zahozeni druhe poloviny dat -> absolutni hodnota
     # vraci jiz upraveny ramec

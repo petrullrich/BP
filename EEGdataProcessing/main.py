@@ -10,6 +10,7 @@ from keras.layers import Dense, Activation
 
 
 def set_all_data(dataType, challengeSet):
+
     if (challengeSet == 'think_closed'):
         challengeNumbers = ['3',
                             '6']  # v challengeNumbers jsou cisla, ktera odpovidaji prave a leve ruce pro danou sadu
@@ -20,6 +21,12 @@ def set_all_data(dataType, challengeSet):
         challengeNumbers = ['1', '4']
 
     challengeTypeBinary = [0, 0, 0]
+
+    # format labelu pouzitych jako vstup do neuronove site
+    # [x,y,z], x == 0 -> leva ruka, x == 1 -> prava ruka
+    # yz == 00 -> stage 1 (priprava)
+    # yz == 01 -> stage 2 (provadeni dane cinnosti)
+    # yz == 10 -> stage 3 (odpocinek)
 
     for ch in challengeNumbers:
 
@@ -48,9 +55,9 @@ def set_all_data(dataType, challengeSet):
                                                            featuresTimestamps)  # ziskani ofsetu a delky dane challenge
 
             EEGdata.processData(challengesAttributes, challengeTypeBinary,
-                                len(channels))  # zpracovani dat pro danou challenge
+                                len(channels), dataType)  # zpracovani dat pro danou challenge
 
-#------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # MAIN
 
 fPath = 'data/json/'
@@ -76,17 +83,25 @@ EEGlabels = ChallengeClass.challange(lFilename, lPath)
 # druha: mysleni s otevrenyma ocima (think_open)
 # treti: mysleni se zavrenyma ocima (think_closed)
 challengeSet = 'think_open'
+# arg1: typ dat -
+#   training - trenovaci
+#   testing - testovaci
 set_all_data('training', challengeSet)
+set_all_data('testing', challengeSet)
 
 #print("labelsForNN(before numpy array): ", EEGdata.labelsForNN)
 #print('len in labelsForNN: ', len(EEGdata.labelsForNN))
 EEGdata.dataForNN = np.array(EEGdata.dataForNN)
+EEGdata.testingDataForNN = np.array(EEGdata.testingDataForNN)
 #for arr in EEGdata.dataForNN:
     #print(len(arr))
 EEGdata.labelsForNN = np.array(EEGdata.labelsForNN)
+EEGdata.testingLabelsForNN = np.array(EEGdata.testingLabelsForNN)
 print("dataForNN: ", EEGdata.dataForNN)
-print("labelsForNN: ", EEGdata.labelsForNN)
-#keras model
+print("Testing data: ", EEGdata.testingDataForNN)
+#print("labelsForNN: ", EEGdata.labelsForNN)
+# _______________________________________________________
+# keras model
 model = Sequential()
 model.add(Dense(256, activation='sigmoid', input_shape=(64*len(channels),)))
 model.add(Dense(100, activation='sigmoid'))
@@ -94,4 +109,12 @@ model.add(Dense(3, activation='softmax'))
 
 model.compile(optimizer='Adamax', loss='binary_crossentropy', metrics=['accuracy'])
 model.fit(EEGdata.dataForNN, EEGdata.labelsForNN, epochs=20, batch_size=1024, shuffle=True)
+loss, acc = model.evaluate(EEGdata.testingDataForNN, EEGdata.testingLabelsForNN)
+pred = model.predict(EEGdata.testingDataForNN, batch_size=1024)
 
+# ________________________________
+# vyhodnoceni predikci
+print("predictions: ", pred)
+print("len of predict", len(pred))
+print("acc", acc)
+print("loss", loss)
