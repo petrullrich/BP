@@ -7,6 +7,7 @@ import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
 import json
 import copy
+import ast
 
 class channelData:
 
@@ -35,10 +36,37 @@ class channelData:
         # list listu - vstup do neur. s. (labels) - TESTOVACI
         self.testingLabelsForNN = []
 
+    # upraveni souboru s features od Zdenka
+    def repairFeatures(self):
 
-        channelData.load_json_features(self)
+        temporaryDic = {}
+        repairedFeautures = '{'
+        with open(self.path+self.filename, "r") as read_file:
+            for line in read_file.readlines():
+                if repairedFeautures[-1] != '}':
+                    repairedFeautures = repairedFeautures + line[1:-2]
 
-    # vola se pri vytvoreni instance tridy
+                # pridani carky
+                repairedFeautures = repairedFeautures + ', '
+
+        repairedFeautures = repairedFeautures[0:-2]
+        repairedFeautures = repairedFeautures + '}'
+        #print("repairedFeautures: ", repairedFeautures)
+        print(type(repairedFeautures))
+        repairedFeautures = ast.literal_eval(repairedFeautures)
+        print(type(repairedFeautures))
+
+        for key in sorted(repairedFeautures.keys()):
+            temporaryDic.update({key : repairedFeautures[key]})
+        repairedFeautures = "["+str(temporaryDic)+"]"
+        repairedFeautures = repairedFeautures.replace("\'", "\"")
+
+        #with open("data/dataZdenek/Repairedfeatures", "w") as writeRepaired:
+        #    writeRepaired.write(str(repairedFeautures))
+        with open(self.path+self.filename, "w") as write_file:
+            write_file.write(repairedFeautures)
+
+    # doplneni tridni promenne data
     def load_json_features(self):
 
         firstTimestamp = None
@@ -76,8 +104,8 @@ class channelData:
 
             self.data.append(data)
 
-        print(self.timestamps)
-        print(*self.data, sep = "\n")
+        #print(self.timestamps)
+       # print(*self.data, sep = "\n")
 
 
     # horni propust - filtrovani spodnich 5 Hz
@@ -134,11 +162,11 @@ class channelData:
 
                 currentPosition += self.frameShift  # posunuti framu o shift
 
-            print(self.dataForNN)
+            #print("dataForNN", self.dataForNN)
             #print(*self.dataForNN, sep="\n")
-            print(len(self.dataForNN))
-            print(self.labelsForNN)
-            print(len(self.labelsForNN))
+            print("Delka promenne dataForNN: ", len(self.dataForNN))
+            print("labelsForNN: ", self.labelsForNN)
+            print("Delka promenne labelsForNN: ", len(self.labelsForNN))
 
     # zpracovani daneho ramce:
     # fourierova transformace -> zahozeni druhe poloviny dat -> absolutni hodnota

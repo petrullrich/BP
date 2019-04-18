@@ -16,8 +16,25 @@ class challange:
         self.path = path
         self.challenges = {}
 
+    # upraveni souboru s labely od Zdenka
+    def repairLabels(self):
+        repairedLabels = '['
+        with open(self.path+self.filename, "r") as read_file:
+            for line in read_file.readlines():
+                repairedLabels = repairedLabels + line
+                #odstraneni newline (pokud to neni posledni radek - tam newline neni)
+                if repairedLabels[-1] != '}':
+                    repairedLabels = repairedLabels[0:-1]
+                # pridani carky
+                repairedLabels = repairedLabels + ','
 
-        challange.load_json_labels(self)
+        repairedLabels = repairedLabels[0:-1]
+        repairedLabels = repairedLabels +']'
+        #print("repairedLabels: ", repairedLabels)
+
+        with open(self.path+self.filename, "w") as write_file:
+            write_file.write(repairedLabels)
+
 
     def load_json_labels(self):
 
@@ -158,10 +175,10 @@ class challange:
                 # print("OFFSET AND LENGTH: ",challengeAttributes)
                 challengeNumber += 1
 
-            print('timestamp 0: ', featuresTimestamps[0])
-            print('timestamp 0+824: ', featuresTimestamps[0 + 824])
-            print('timestamp 3813: ', featuresTimestamps[3813])
-            print('timestamp 3813+1109: ', featuresTimestamps[3813+1109])
+            #print('timestamp 0: ', featuresTimestamps[0])
+            #print('timestamp 0+824: ', featuresTimestamps[0 + 824])
+            #print('timestamp 3813: ', featuresTimestamps[3813])
+            #print('timestamp 3813+1109: ', featuresTimestamps[3813+1109])
             print("ChallengesAttributes: ", challengesAttributes)
 
             return challengesAttributes
