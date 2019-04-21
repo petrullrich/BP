@@ -91,7 +91,7 @@ class challange:
                 if len(challengeRange[0]) != 2:
                     break
 
-                # print("Ch1: ", challenges)
+                #print("Ch1: ", challenges)
 
                 # pokud klic neexistuje, vytvori se list pro dany klic
                 if not lastKey in challenges:
@@ -125,9 +125,10 @@ class challange:
                 timestampChange = timestamp
 
         # na konci je nutne doplnit rozsah posledni challenge
-        challengeRange.append(lastTimestamp)
-        challenges[lastKey] = []
-        challenges[lastKey][len(challenges[lastKey]):] = challengeRange
+        challengeRange[0].append(lastTimestamp)
+        #print("CHall range: ",challengeRange)
+       # challenges[lastKey] = []
+        challenges[lastKey][len(challenges[lastKey]):] = copy.deepcopy(challengeRange)
         self.challenges = challenges
         print('Challenges: ', self.challenges)
 
@@ -144,7 +145,7 @@ class challange:
                 challengeAttributes = []
                 offset = 1
 
-                # kontrolujeme kazdy timestampv poli timestampu
+                # kontrolujeme kazdy timestamp v poli timestampu
                 for featuresTimestamp in featuresTimestamps:
 
                     if(bool(offsetBool)):

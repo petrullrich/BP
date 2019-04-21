@@ -29,29 +29,48 @@ def set_all_data(dataType, challengeSet):
     # yz == 10 -> stage 3 (odpocinek)
 
     # format labelu pouzitych jako vstup do neuronove site
-    # [x,y,z], x == 1 && y==0 -> leva ruka, x == 0 && y==1 -> prava ruka
-    # z == 1 -> samotna challenge
-    # z == 0 -> nic nedelani (priprava + odpocinek)
+    # [x,y,z]
+    # x == 1 && y==0 && z==0 -> leva ruka
+    # x == 0 && y==1 && z==0 -> prava ruka
+    # x == 0 && y==0 && z==1 -> nic nedelani (priprava + odpocinek)
+
+    left = False
+    right = False
 
     for ch in challengeNumbers:
-
+        # leva ruka
         if ch == challengeNumbers[0]:
-            challengeTypeBinary[0] = 1
-            challengeTypeBinary[1] = 0
+            left = True
+            right = False
+
+        # prava ruka
         else:
-            challengeTypeBinary[0] = 0
-            challengeTypeBinary[1] = 1
+            left = False
+            right = True
+
 
         for i in range(1, 4):
             # stage 1 - priprava
             if i == 1:
-                challengeTypeBinary[2] = 0
+                challengeTypeBinary[0] = 0
+                challengeTypeBinary[1] = 0
+                challengeTypeBinary[2] = 1
             # stage 2 - samotna challenge
             elif i == 2:
-                challengeTypeBinary[2] = 1
+
+                challengeTypeBinary[2] = 0
+
+                if left:
+                    challengeTypeBinary[0] = 1
+                    challengeTypeBinary[1] = 0
+                elif right:
+                    challengeTypeBinary[0] = 0
+                    challengeTypeBinary[1] = 1
             # stage 3 - pauza
             else:
-                challengeTypeBinary[2] = 0
+                challengeTypeBinary[0] = 0
+                challengeTypeBinary[1] = 0
+                challengeTypeBinary[2] = 1
 
             challengeType = ch + str(i)
             print('____________________________________________')
@@ -66,22 +85,38 @@ def set_all_data(dataType, challengeSet):
 #-------------------------------------------------------------------------------
 # MAIN
 
-fPath = 'data/dataZdenek/test/'
-fFilename = '0feat'
-
 # nastaveni elektrod, ze kterych se zpracuji data
 # musi byt list i v pripade jednoho channelu
 channels = [1,2,3,4,5,6,7,8]
 
-EEGdata = ChannelDataClass.channelData(channels, fFilename, fPath)
-# upraveni souboru s features od Zdenka
-#EEGdata.repairFeatures()
-# nacteni souboru s features a dpolneni tridni promenne data
-EEGdata.load_json_features()
-featuresTimestamps = EEGdata.timestamps
+# cesta k features
+fPath = 'data/dataZdenek/test/'
+# nazev souboru s features
+fFilenames = []
+fFilenames.append('0feat')
+fFilenames.append('1feat')
+fFilenames.append('2feat')
+EEGdata =[]
+featuresTimestamps = []
 
-EEGdata.removeDcOffset() #filtr
-EEGdata.removeMainInterference() #filtr
+# instance tridy channelDataClass
+for index, fFilename in enumerate(fFilenames):
+
+    EEGdata[index] = ChannelDataClass.channelData(channels, fFilenames[index], fPath)
+# upraveni souboru s features od Zdenka
+    EEGdata[index].repairFeatures()
+# nacteni souboru s features a dpolneni tridni promenne data
+    EEGdata[index].load_json_features()
+
+    featuresTimestamps[index] = EEGdata[index].timestamps
+
+    EEGdata[index].removeDcOffset()  # filtr
+    EEGdata[index].removeMainInterference()  # filtr
+
+#----------------------------------------------------
+#                     LABELS
+#----------------------------------------------------
+
 
 lPath = 'data/dataZdenek/test/'
 lFilename = '0lab'
@@ -97,13 +132,13 @@ EEGlabels.load_json_labels()
 # prvni: delani cinnosti (do_it)
 # druha: mysleni s otevrenyma ocima (think_open)
 # treti: mysleni se zavrenyma ocima (think_closed)
-challengeSet = 'think_open'
+challengeSet = 'think_closed'
 # arg1: typ dat -
 #   training - trenovaci
 #   testing - testovaci
 
 set_all_data('training', challengeSet)
-set_all_data('testing', challengeSet)
+#set_all_data('testing', challengeSet)
 
 
 #print("labelsForNN(before numpy array): ", EEGdata.labelsForNN)
@@ -114,26 +149,35 @@ EEGdata.testingDataForNN = np.array(EEGdata.testingDataForNN)
     #print(len(arr))
 EEGdata.labelsForNN = np.array(EEGdata.labelsForNN)
 EEGdata.testingLabelsForNN = np.array(EEGdata.testingLabelsForNN)
-#print("dataForNN: ", EEGdata.dataForNN)
+print("dataForNN: ", EEGdata.dataForNN)
 #print("first position in dataForNN LEN: ", len(EEGdata.dataForNN[0]))
 #print("Testing data: ", EEGdata.testingDataForNN)
 #print("labelsForNN: ", EEGdata.labelsForNN)
 
+# _______________________________________
+# Zkusebni NN
+
+
+
 # _______________________________________________________
 # keras model
+
+#np.random.seed(7)
+
 model = Sequential()
-model.add(Dense(256, activation='sigmoid', input_shape=(64*len(channels),)))
+model.add(Dense(64*len(channels), activation='sigmoid', input_shape=(64*len(channels),)))
 model.add(Dense(100, activation='sigmoid'))
 model.add(Dense(3, activation='softmax'))
 
 model.compile(optimizer='Adamax', loss='binary_crossentropy', metrics=['accuracy'])
-model.fit(EEGdata.dataForNN, EEGdata.labelsForNN, epochs=1, batch_size=1024, shuffle=True)
-loss, acc = model.evaluate(EEGdata.testingDataForNN, EEGdata.testingLabelsForNN)
-pred = model.predict(EEGdata.testingDataForNN, batch_size=1024)
+model.fit(EEGdata.dataForNN, EEGdata.labelsForNN, epochs=50, batch_size=10)
+acc = model.evaluate(EEGdata.dataForNN, EEGdata.labelsForNN)
+pred = model.predict(EEGdata.dataForNN)
 
 # ________________________________
 # vyhodnoceni predikci
 print("predictions: ", pred)
 print("len of predict", len(pred))
-print("acc", acc)
-print("loss", loss)
+print(model.metrics_names[1], acc[1])
+print(model.metrics_names[0], acc[0])
+#print("loss", loss)
