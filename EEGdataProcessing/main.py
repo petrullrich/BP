@@ -9,7 +9,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Activation
 
 
-def set_all_data(dataType, challengeSet):
+def set_all_data(dataType, challengeSet, index):
 
     if (challengeSet == 'think_closed'):
         challengeNumbers = ['3',
@@ -76,57 +76,59 @@ def set_all_data(dataType, challengeSet):
             print('____________________________________________')
             print('ChallengeType: ', challengeType)
             print('ChallengeTypeBinary: ', challengeTypeBinary)
-            challengesAttributes = EEGlabels.get_challange(challengeType,
-                                                           featuresTimestamps)  # ziskani ofsetu a delky dane challenge
+            challengesAttributes = EEGlabels[index].get_challange(challengeType,
+                                                           featuresTimestamps[index])  # ziskani ofsetu a delky dane challenge
 
-            EEGdata.processData(challengesAttributes, challengeTypeBinary,
+            EEGdata[index].processData(challengesAttributes, challengeTypeBinary,
                                 len(channels), dataType)  # zpracovani dat pro danou challenge
 
 #-------------------------------------------------------------------------------
 # MAIN
 
+# data spojene z vice nahravani
+allDataForNN = []
+allLabelsForNN = []
 # nastaveni elektrod, ze kterych se zpracuji data
 # musi byt list i v pripade jednoho channelu
 channels = [1,2,3,4,5,6,7,8]
 
+#----------------------------------------------------
+#                    FEATURES
+#----------------------------------------------------
+
 # cesta k features
-fPath = 'data/dataZdenek/test/'
+fPath = 'data/dataZdenek/train/'
 # nazev souboru s features
 fFilenames = []
 fFilenames.append('0feat')
 fFilenames.append('1feat')
 fFilenames.append('2feat')
+fFilenames.append('3feat')
+fFilenames.append('4feat')
+fFilenames.append('5feat')
 EEGdata =[]
 featuresTimestamps = []
 
 # instance tridy channelDataClass
 for index, fFilename in enumerate(fFilenames):
-
-    EEGdata[index] = ChannelDataClass.channelData(channels, fFilenames[index], fPath)
-# upraveni souboru s features od Zdenka
-    EEGdata[index].repairFeatures()
-# nacteni souboru s features a dpolneni tridni promenne data
+    print("index: ", index)
+    print("fFilename: ", fFilename)
+    EEGdata.append(ChannelDataClass.channelData(channels, fFilename, fPath))
+    # upraveni souboru s features od Zdenka
+    #if index == 2:
+    #EEGdata[index].repairFeatures()
+    # nacteni souboru s features a dpolneni tridni promenne data
     EEGdata[index].load_json_features()
 
-    featuresTimestamps[index] = EEGdata[index].timestamps
+    featuresTimestamps.append(EEGdata[index].timestamps)
 
     EEGdata[index].removeDcOffset()  # filtr
     EEGdata[index].removeMainInterference()  # filtr
 
+
 #----------------------------------------------------
 #                     LABELS
 #----------------------------------------------------
-
-
-lPath = 'data/dataZdenek/test/'
-lFilename = '0lab'
-
-# instance tridy challengeClass
-EEGlabels = ChallengeClass.challange(lFilename, lPath)
-# upraveni souboru s labely od Zdenka
-#EEGlabels.repairLabels()
-# nacteni souboru s labely a doplneni tridni promenne chalenges
-EEGlabels.load_json_labels()
 
 # vybrani, kterou sadu challengi chceme trenovat:
 # prvni: delani cinnosti (do_it)
@@ -137,29 +139,54 @@ challengeSet = 'think_closed'
 #   training - trenovaci
 #   testing - testovaci
 
-set_all_data('training', challengeSet)
-#set_all_data('testing', challengeSet)
+
+lPath = 'data/dataZdenek/train/'
+
+lFilenames = []
+lFilenames.append('0lab')
+lFilenames.append('1lab')
+lFilenames.append('2lab')
+lFilenames.append('3lab')
+lFilenames.append('4lab')
+lFilenames.append('5lab')
+EEGlabels = []
+
+for index, lFilename in enumerate(lFilenames):
+    print("lFilename: ", lFilename)
+    # instance tridy challengeClass
+    EEGlabels.append(ChallengeClass.challange(lFilename, lPath))
+    # upraveni souboru s labely od Zdenka
+    #if index == 2:
+    #EEGlabels[index].repairLabels()
+    # nacteni souboru s labely a doplneni tridni promenne chalenges
+    EEGlabels[index].load_json_labels()
 
 
-#print("labelsForNN(before numpy array): ", EEGdata.labelsForNN)
-#print('len in labelsForNN: ', len(EEGdata.labelsForNN))
-EEGdata.dataForNN = np.array(EEGdata.dataForNN)
-EEGdata.testingDataForNN = np.array(EEGdata.testingDataForNN)
-#for arr in EEGdata.dataForNN:
-    #print(len(arr))
-EEGdata.labelsForNN = np.array(EEGdata.labelsForNN)
-EEGdata.testingLabelsForNN = np.array(EEGdata.testingLabelsForNN)
-print("dataForNN: ", EEGdata.dataForNN)
-#print("first position in dataForNN LEN: ", len(EEGdata.dataForNN[0]))
-#print("Testing data: ", EEGdata.testingDataForNN)
-#print("labelsForNN: ", EEGdata.labelsForNN)
+    # parametr index urcuje ktera instance tridy se prave zpracovava
+    set_all_data('training', challengeSet, index)
+    #set_all_data('testing', challengeSet)
 
+    #print("dataForNN: ", EEGdata[index].dataForNN)
+    allDataForNN = allDataForNN + EEGdata[index].dataForNN
+    allLabelsForNN = allLabelsForNN + EEGdata[index].labelsForNN
+
+print("Len of allDataForNN: ", len(allDataForNN))
+allLabelsForNN = np.array(allLabelsForNN)
+# print("labelsForNN(before numpy array): ", EEGdata.labelsForNN)
+# print('len in labelsForNN: ', len(EEGdata.labelsForNN))
+allDataForNN = np.array(allDataForNN)
+print("Len of allDataForNN (np array): ", len(allDataForNN))
+print("All data for NN: ",allDataForNN)
+print("All labels for NN", allLabelsForNN)
+
+allTestDataForNN = allDataForNN
+allTestLabelsForNN = allLabelsForNN
 # _______________________________________
 # Zkusebni NN
 
 
 
-# _______________________________________________________
+# __________________________________________________________________________________________
 # keras model
 
 #np.random.seed(7)
@@ -170,14 +197,52 @@ model.add(Dense(100, activation='sigmoid'))
 model.add(Dense(3, activation='softmax'))
 
 model.compile(optimizer='Adamax', loss='binary_crossentropy', metrics=['accuracy'])
-model.fit(EEGdata.dataForNN, EEGdata.labelsForNN, epochs=50, batch_size=10)
-acc = model.evaluate(EEGdata.dataForNN, EEGdata.labelsForNN)
-pred = model.predict(EEGdata.dataForNN)
+model.fit(allDataForNN, allLabelsForNN, epochs=300, batch_size=1000)
+score = model.evaluate(allTestDataForNN, allTestLabelsForNN)
+predictions = model.predict(allTestDataForNN)
 
-# ________________________________
+# ----------------------------------------------
+# vyhodnoceni presnosti
+print(model.metrics_names[1], score[1])
+print(model.metrics_names[0], score[0])
+
+# ----------------------------------------------
 # vyhodnoceni predikci
-print("predictions: ", pred)
-print("len of predict", len(pred))
-print(model.metrics_names[1], acc[1])
-print(model.metrics_names[0], acc[0])
-#print("loss", loss)
+
+print("predictions: ", predictions)
+print("len of predict", len(predictions))
+
+left = 0
+right = 0
+pause = 0
+
+for label in allTestLabelsForNN:
+    if label[0] == 1:
+        left += 1
+    elif label[1] == 1:
+        right += 1
+    if label[2] == 1:
+        pause += 1
+
+leftCorrect = 0
+rightCorrect = 0
+pauseCorrect = 0
+wrong = 0
+
+for i, pr in enumerate(predictions):
+    if pr[0] > pr[1] and pr[0] > pr[2] and allTestLabelsForNN[i][0] == 1:
+        # leva spravne
+        leftCorrect += 1
+    elif pr[1] > pr[0] and pr[1] > pr[2] and allTestLabelsForNN[i][1] == 1:
+        # prava spravne
+        rightCorrect += 1
+    elif pr[2] > pr[1] and pr[2] > pr[1] and allTestLabelsForNN[i][2] == 1:
+        # nic nedelani spravne
+        pauseCorrect += 1
+    else:
+        wrong += 1
+
+print("leva: ", leftCorrect, "z", left)
+print("prava: ", rightCorrect, "z", right)
+print("pause: ", pauseCorrect, "z", pause)
+print("wrong: ", wrong)
