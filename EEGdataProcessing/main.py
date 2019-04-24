@@ -11,6 +11,8 @@ from keras.layers import Dense, Activation
 
 def set_all_data(dataType, challengeSet, index):
 
+    challengeNumbers = ['3','6'] # defaultní hodnota
+
     if (challengeSet == 'think_closed'):
         challengeNumbers = ['3',
                             '6']  # v challengeNumbers jsou cisla, ktera odpovidaji prave a leve ruce pro danou sadu
@@ -23,31 +25,20 @@ def set_all_data(dataType, challengeSet, index):
     challengeTypeBinary = [0, 0, 0]
 
     # format labelu pouzitych jako vstup do neuronove site
-    # [x,y,z], x == 0 -> leva ruka, x == 1 -> prava ruka
-    # yz == 00 -> stage 1 (priprava)
-    # yz == 01 -> stage 2 (provadeni dane cinnosti)
-    # yz == 10 -> stage 3 (odpocinek)
-
-    # format labelu pouzitych jako vstup do neuronove site
     # [x,y,z]
     # x == 1 && y==0 && z==0 -> leva ruka
     # x == 0 && y==1 && z==0 -> prava ruka
     # x == 0 && y==0 && z==1 -> nic nedelani (priprava + odpocinek)
-
-    left = False
-    right = False
 
     for ch in challengeNumbers:
         # leva ruka
         if ch == challengeNumbers[0]:
             left = True
             right = False
-
         # prava ruka
         else:
             left = False
             right = True
-
 
         for i in range(1, 4):
             # stage 1 - priprava
@@ -76,24 +67,41 @@ def set_all_data(dataType, challengeSet, index):
             print('____________________________________________')
             print('ChallengeType: ', challengeType)
             print('ChallengeTypeBinary: ', challengeTypeBinary)
-            challengesAttributes = EEGlabels[index].get_challange(challengeType,
+            if dataType == 'training':
+                challengesAttributes = EEGlabels[index].get_challange(challengeType,
                                                            featuresTimestamps[index])  # ziskani ofsetu a delky dane challenge
 
-            EEGdata[index].processData(challengesAttributes, challengeTypeBinary,
-                                len(channels), dataType)  # zpracovani dat pro danou challenge
+                EEGdata[index].processData(challengesAttributes, challengeTypeBinary,
+                                           len(channels))  # zpracovani dat pro danou challenge
+            elif dataType == 'testing':
+                challengesAttributes = EEGTestlabels[index].get_challange(challengeType,
+                                                                      featuresTimestamps[
+                                                                          index])  # ziskani ofsetu a delky dane challenge
 
-#-------------------------------------------------------------------------------
-# MAIN
+                EEGtestData[index].processData(challengesAttributes, challengeTypeBinary,
+                                           len(channels))  # zpracovani dat pro danou challenge
+            else:
+                print('Zadejte správný typ dat (training/testing)')
 
+
+
+#___________________________________________________________________________________________________________
+#                                                    MAIN
+#___________________________________________________________________________________________________________
 # data spojene z vice nahravani
 allDataForNN = []
 allLabelsForNN = []
+allTestDataForNN = []
+allTestLabelsForNN = []
 # nastaveni elektrod, ze kterych se zpracuji data
 # musi byt list i v pripade jednoho channelu
 channels = [1,2,3,4,5,6,7,8]
 
+#_________________________________________________________________
+# TRAINING
+
 #----------------------------------------------------
-#                    FEATURES
+#                 FEATURES - TRAINING
 #----------------------------------------------------
 
 # cesta k features
@@ -106,7 +114,7 @@ fFilenames.append('2feat')
 fFilenames.append('3feat')
 fFilenames.append('4feat')
 fFilenames.append('5feat')
-EEGdata =[]
+EEGdata = []
 featuresTimestamps = []
 
 # instance tridy channelDataClass
@@ -115,7 +123,6 @@ for index, fFilename in enumerate(fFilenames):
     print("fFilename: ", fFilename)
     EEGdata.append(ChannelDataClass.channelData(channels, fFilename, fPath))
     # upraveni souboru s features od Zdenka
-    #if index == 2:
     #EEGdata[index].repairFeatures()
     # nacteni souboru s features a dpolneni tridni promenne data
     EEGdata[index].load_json_features()
@@ -125,20 +132,15 @@ for index, fFilename in enumerate(fFilenames):
     EEGdata[index].removeDcOffset()  # filtr
     EEGdata[index].removeMainInterference()  # filtr
 
-
 #----------------------------------------------------
-#                     LABELS
+#                 LABELS - TRAINING
 #----------------------------------------------------
 
 # vybrani, kterou sadu challengi chceme trenovat:
 # prvni: delani cinnosti (do_it)
 # druha: mysleni s otevrenyma ocima (think_open)
 # treti: mysleni se zavrenyma ocima (think_closed)
-challengeSet = 'think_closed'
-# arg1: typ dat -
-#   training - trenovaci
-#   testing - testovaci
-
+challengeSet = 'do_it'
 
 lPath = 'data/dataZdenek/train/'
 
@@ -156,31 +158,196 @@ for index, lFilename in enumerate(lFilenames):
     # instance tridy challengeClass
     EEGlabels.append(ChallengeClass.challange(lFilename, lPath))
     # upraveni souboru s labely od Zdenka
-    #if index == 2:
     #EEGlabels[index].repairLabels()
     # nacteni souboru s labely a doplneni tridni promenne chalenges
     EEGlabels[index].load_json_labels()
 
-
     # parametr index urcuje ktera instance tridy se prave zpracovava
     set_all_data('training', challengeSet, index)
-    #set_all_data('testing', challengeSet)
 
     #print("dataForNN: ", EEGdata[index].dataForNN)
     allDataForNN = allDataForNN + EEGdata[index].dataForNN
     allLabelsForNN = allLabelsForNN + EEGdata[index].labelsForNN
 
 print("Len of allDataForNN: ", len(allDataForNN))
+
+#_________________________________________________________________
+# TESTING
+
+#----------------------------------------------------
+#                 FEATURES - TESTING
+#----------------------------------------------------
+
+# cesta k features
+fTestPath = 'data/dataZdenek/test/'
+# nazev souboru s features
+fTestFilenames = []
+fTestFilenames.append('0feat')
+fTestFilenames.append('1feat')
+fTestFilenames.append('2feat')
+EEGtestData = []
+featuresTimestamps = []
+
+# instance tridy channelDataClass
+for index, fFilename in enumerate(fTestFilenames):
+    print("index: ", index)
+    print("fTestFilename: ", fFilename)
+    EEGtestData.append(ChannelDataClass.channelData(channels, fFilename, fTestPath))
+    # upraveni souboru s features od Zdenka
+    # EEGtestData[index].repairFeatures()
+    # nacteni souboru s features a dpolneni tridni promenne data
+    EEGtestData[index].load_json_features()
+
+    featuresTimestamps.append(EEGtestData[index].timestamps) # pole s timestampy z features
+
+    EEGtestData[index].removeDcOffset()  # filtr
+    EEGtestData[index].removeMainInterference()  # filtr
+
+#----------------------------------------------------
+#                 LABELS - TESTING
+#----------------------------------------------------
+
+lTestPath = 'data/dataZdenek/test/'
+
+lTestFilenames = []
+lTestFilenames.append('0lab')
+lTestFilenames.append('1lab')
+lTestFilenames.append('2lab')
+EEGTestlabels = []
+
+for index, lFilename in enumerate(lTestFilenames):
+    print("lTestFilename: ", lFilename)
+    # instance tridy challengeClass
+    EEGTestlabels.append(ChallengeClass.challange(lFilename, lTestPath))
+    # upraveni souboru s labely od Zdenka
+    #EEGTestlabels[index].repairLabels()
+    # nacteni souboru s labely a doplneni tridni promenne chalenges
+    EEGTestlabels[index].load_json_labels()
+
+    # parametr index urcuje ktera instance tridy se prave zpracovava
+    set_all_data('testing', challengeSet, index)
+
+    #print("dataForNN: ", EEGdata[index].dataForNN)
+    allTestDataForNN = allTestDataForNN + EEGtestData[index].dataForNN
+    allTestLabelsForNN = allTestLabelsForNN + EEGtestData[index].labelsForNN
+
+print("Len of allTestDataForNN: ", len(allTestDataForNN))
+
+# __________________________________________________________________________________________
+# pro vstupni data ->
+# odstraneni prebytecnych ramcu - tzn. pro kazdou tridu stejny pocet ramcu
+
+leftTraining = 0
+rightTraining = 0
+pauseTraining = 0
+
+for label in allLabelsForNN:
+    if label[0] == 1:
+        leftTraining += 1
+    elif label[1] == 1:
+        rightTraining += 1
+    elif label[2] == 1:
+        pauseTraining += 1
+
+print("Before reduce: left: ", leftTraining)
+print("Before reduce: right: ", rightTraining)
+print("Before reduce: pause: ", pauseTraining)
+
+# odebrani right a pause
+if leftTraining < rightTraining and leftTraining < pauseTraining:
+    print("nejmeně je leftTraining")
+    reduceRight = rightTraining - leftTraining
+    reducePause = pauseTraining - leftTraining
+
+    i = 0
+    while i < len(allLabelsForNN):
+        if allLabelsForNN[i][1] == 1 and reduceRight != 0:
+            del allLabelsForNN[i]
+            del allDataForNN[i]
+            reduceRight -= 1
+            i -= 1
+        elif allLabelsForNN[i][2] == 1 and reducePause != 0:
+            del allLabelsForNN[i]
+            del allDataForNN[i]
+            reducePause -= 1
+            i -= 1
+        i += 1
+# odebrani left a pause
+elif rightTraining < leftTraining and rightTraining < pauseTraining:
+
+    reduceLeft = leftTraining - rightTraining
+    reducePause = pauseTraining - rightTraining
+    print("nejmeně je rightTraining")
+    print("reduceLeft: ", reduceLeft)
+    print("reducePause", reducePause)
+    i = 0
+    while i < len(allLabelsForNN):
+        #print( "i: ", i)
+        #print("allLabelsForNN[i] in while: ",allLabelsForNN[i])
+        if allLabelsForNN[i][0] == 1 and reduceLeft != 0:
+            #print("delete left")
+            del allLabelsForNN[i]
+            del allDataForNN[i]
+            reduceLeft -= 1
+            i -= 1
+        elif allLabelsForNN[i][2] == 1 and reducePause != 0:
+            #print("delete pause")
+            del allLabelsForNN[i]
+            del allDataForNN[i]
+            reducePause -= 1
+            i -= 1
+        i += 1
+# odebrani left a right
+elif pauseTraining < leftTraining and pauseTraining < rightTraining:
+
+    print("nejmeně je pauseTraining")
+    reduceLeft = leftTraining - pauseTraining
+    reduceRight = rightTraining - pauseTraining
+
+    i = 0
+    while i < len(allLabelsForNN):
+        if allLabelsForNN[i][1] == 1 and reduceLeft != 0:
+            del allLabelsForNN[i]
+            del allDataForNN[i]
+            reduceLeft -= 1
+            i -= 1
+        elif allLabelsForNN[i][2] == 1 and reduceRight != 0:
+            del allLabelsForNN[i]
+            del allDataForNN[i]
+            reduceLeft -= 1
+            i -= 1
+        i += 1
+
+leftTraining = 0
+rightTraining = 0
+pauseTraining = 0
+
+for label in allLabelsForNN:
+    if label[0] == 1:
+        leftTraining += 1
+    elif label[1] == 1:
+        rightTraining += 1
+    elif label[2] == 1:
+        pauseTraining += 1
+
+
+print("After reduce: left: ", leftTraining)
+print("After reduce: right: ", rightTraining)
+print("After reduce: pause: ", pauseTraining)
+
+
+# prevedeni na numpy array, kvuli NN
 allLabelsForNN = np.array(allLabelsForNN)
-# print("labelsForNN(before numpy array): ", EEGdata.labelsForNN)
-# print('len in labelsForNN: ', len(EEGdata.labelsForNN))
 allDataForNN = np.array(allDataForNN)
 print("Len of allDataForNN (np array): ", len(allDataForNN))
 print("All data for NN: ",allDataForNN)
 print("All labels for NN", allLabelsForNN)
 
-allTestDataForNN = allDataForNN
-allTestLabelsForNN = allLabelsForNN
+allTestLabelsForNN = np.array(allTestLabelsForNN)
+allTestDataForNN = np.array(allTestDataForNN)
+print("Len of allTestingDataForNN (np array): ", len(allTestDataForNN))
+print("All testing data for NN: ",allTestDataForNN)
+print("All testing labels for NN", allTestLabelsForNN)
 # _______________________________________
 # Zkusebni NN
 
@@ -189,15 +356,17 @@ allTestLabelsForNN = allLabelsForNN
 # __________________________________________________________________________________________
 # keras model
 
+
+
 #np.random.seed(7)
 
 model = Sequential()
-model.add(Dense(64*len(channels), activation='sigmoid', input_shape=(64*len(channels),)))
+model.add(Dense(512, activation='sigmoid', input_shape=(64*len(channels),)))
 model.add(Dense(100, activation='sigmoid'))
 model.add(Dense(3, activation='softmax'))
 
 model.compile(optimizer='Adamax', loss='binary_crossentropy', metrics=['accuracy'])
-model.fit(allDataForNN, allLabelsForNN, epochs=300, batch_size=1000)
+model.fit(allDataForNN, allLabelsForNN, epochs=100, batch_size=1108)
 score = model.evaluate(allTestDataForNN, allTestLabelsForNN)
 predictions = model.predict(allTestDataForNN)
 
@@ -221,7 +390,7 @@ for label in allTestLabelsForNN:
         left += 1
     elif label[1] == 1:
         right += 1
-    if label[2] == 1:
+    elif label[2] == 1:
         pause += 1
 
 leftCorrect = 0

@@ -104,13 +104,14 @@ class channelData:
 
             self.data.append(data)
 
+        #print("In load_json_features, self.data: ", self.data[0][0])
         #print(self.timestamps)
        # print(*self.data, sep = "\n")
 
 
     # horni propust - filtrovani spodnich 5 Hz
     def removeDcOffset(self):
-        hzCutOff = 5.0
+        hzCutOff = 1.0
         b, a = signal.butter(2, (hzCutOff/(self.fs/2)), 'highpass')
         self.data = signal.lfilter(b, a, self.data, 0)
 
@@ -124,8 +125,7 @@ class channelData:
 
     # challengesAttributes - list listu -> prvni hodnota je offset od zacatku dat, druha hodnota je delka challenge
     # challengeType - typ challenge, pro kterou funkci volame -
-    # dataType - testovaci nebo trenovaci data
-    def processData(self, challengesAttributes, challengeType, channelsCount, dataType):
+    def processData(self, challengesAttributes, challengeType, channelsCount):
 
         # pro kazdou challenge
         for challengeAttr in challengesAttributes:
@@ -137,7 +137,11 @@ class channelData:
 
                 for channelNumber in range(channelsCount):
                     # inicializace konkretniho ramce
+                    #print("len of self.data: ", len(self.data[channelNumber]))
+                    #print("self.data: (currPos)", self.data[channelNumber][currentPosition])
+                    #print("self.data: (currPos+frameLength)", self.data[channelNumber][currentPosition])
                     dataInFrame = self.data[channelNumber][currentPosition : (currentPosition+self.frameLength)]
+                    #print("dataInFrame: ", dataInFrame)
                     # zpracovani konkretniho ramce na konkretnim kanalu
                     dataInFrame = channelData.processFrame(self, dataInFrame)
                     allChannelsDataInFrame = allChannelsDataInFrame + dataInFrame
@@ -146,16 +150,11 @@ class channelData:
                     #print('allChannelsDataInFrame(after np): ', allChannelsDataInFrame)
 
                 # doplneni vstupnich dat pro NN
-                if(dataType == 'training'):
-                    self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
-                else:
-                    self.testingDataForNN.append(copy.deepcopy(allChannelsDataInFrame))
 
-                # doplneni labelu pro NN
-                if (dataType == 'training'):
-                    self.labelsForNN.append(copy.deepcopy(challengeType))
-                else:
-                    self.testingLabelsForNN.append(copy.deepcopy(challengeType))
+                self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
+
+                self.labelsForNN.append(copy.deepcopy(challengeType))
+
 
                 #print('allChannelsDataInFrame: ', allChannelsDataInFrame)
                 #print(len(allChannelsDataInFrame))
@@ -164,18 +163,22 @@ class channelData:
 
             #print("dataForNN", self.dataForNN)
             #print(*self.dataForNN, sep="\n")
-            print("Delka promenne dataForNN: ", len(self.dataForNN))
-            print("labelsForNN: ", self.labelsForNN)
-            print("Delka promenne labelsForNN: ", len(self.labelsForNN))
+
+            #print("Delka promenne dataForNN: ", len(self.dataForNN))
+            #print("labelsForNN: ", self.labelsForNN)
+            #print("Delka promenne labelsForNN: ", len(self.labelsForNN))
 
     # zpracovani daneho ramce:
     # fourierova transformace -> zahozeni druhe poloviny dat -> absolutni hodnota
     # vraci jiz upraveny ramec
     def processFrame(self, dataInFrame):
-        # print('Before FFT: ', dataInFrame)
+        #print("Delka dat: ", len(dataInFrame))
+        #print('Before FFT: ', dataInFrame)
         dataInFrame = np.fft.fft(dataInFrame) # FFT
+        #print("Delka dat: ", len(dataInFrame))
         #print('After FFT: ', dataInFrame)
         dataInFrame = dataInFrame[0 : int(self.frameLength/2)] # potrebujeme pouze prvni polovinu hodnot - argumenty zahodime
         dataInFrame = list(map(abs, dataInFrame)) # kazde cislo prevedeno na absolutni hodnotu
-        # print('AFTER ABS: ', dataInFrame)
+        #print("Delka dat: ", len(dataInFrame))
+        #print('AFTER ABS: ', dataInFrame)
         return dataInFrame

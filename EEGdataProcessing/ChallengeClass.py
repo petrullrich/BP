@@ -168,8 +168,8 @@ class challange:
 
                 # pokud existuje pocatecni timestamp pro danou challange, ale koncovy ne, doplni se jako koncovy posledni timestamp
                 if len(challengeAttributes) == 1:
-                    print('Celkovy pocet timestampu (features): ', len(featuresTimestamps))
-                    print('Offset: ', challengeAttributes[0])
+                    #print('Celkovy pocet timestampu (features): ', len(featuresTimestamps))
+                    #print('Offset: ', challengeAttributes[0])
                     challengeAttributes.append(len(featuresTimestamps) - challengeAttributes[0])
 
                 challengesAttributes.append(copy.deepcopy(challengeAttributes))
