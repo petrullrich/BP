@@ -149,6 +149,12 @@ class channelData:
                     #allChannelsDataInFrame = np.array(allChannelsDataInFrame)
                     #print('allChannelsDataInFrame(after np): ', allChannelsDataInFrame)
 
+                # TODO - při doplňování vstupních dat pro NN dávat do jednoho pole namísto jednoho rámce TŘI RÁMCE tzn.
+                # TODO - k současnému jednomu rámci přilepit následující dva
+                # TODO - původní ↓
+                # TODO - [ [64 * počet kanálů ] , [64 * počet kanálů ], [64 * počet kanálů ], [64 * počet kanálů ], ...]
+                # TODO - vylepšení ↓
+                # TODO - [ [64 * počet kanálů.64 * počet kanálů.64 * počet kanálů], [64 * počet kanálů.64 * počet kanálů.64 * počet kanálů]
                 # doplneni vstupnich dat pro NN
 
                 self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
