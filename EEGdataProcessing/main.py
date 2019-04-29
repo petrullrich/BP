@@ -5,6 +5,7 @@ import ChannelDataClass
 
 import json
 import numpy as np
+import random
 
 from keras.models import Sequential
 from keras.layers import Dense, Activation
@@ -102,21 +103,8 @@ def get_NN_data():
     #                 FEATURES - TRAINING
     # ----------------------------------------------------
 
-    # cesta k features
-    fPath = 'data/dataZdenek/train/'
-    # nazev souboru s features
-    fFilenames = []
-    fFilenames.append('0feat')
-    fFilenames.append('1feat')
-    fFilenames.append('2feat')
-    fFilenames.append('3feat')
-    fFilenames.append('4feat')
-    fFilenames.append('5feat')
-
     # instance tridy channelDataClass
     for index, fFilename in enumerate(fFilenames):
-        print("index: ", index)
-        print("fFilename: ", fFilename)
         EEGdata.append(ChannelDataClass.channelData(channels, fFilename, fPath))
         # upraveni souboru s features od Zdenka
         # EEGdata[index].repairFeatures()
@@ -131,16 +119,6 @@ def get_NN_data():
     # ----------------------------------------------------
     #                 LABELS - TRAINING
     # ----------------------------------------------------
-
-    lPath = 'data/dataZdenek/train/'
-
-    lFilenames = []
-    lFilenames.append('0lab')
-    lFilenames.append('1lab')
-    lFilenames.append('2lab')
-    lFilenames.append('3lab')
-    lFilenames.append('4lab')
-    lFilenames.append('5lab')
 
     for index, lFilename in enumerate(lFilenames):
         print("lFilename: ", lFilename)
@@ -167,14 +145,6 @@ def get_NN_data():
     #                 FEATURES - TESTING
     # ----------------------------------------------------
 
-    # cesta k features
-    fTestPath = 'data/dataZdenek/test/'
-    # nazev souboru s features
-    fTestFilenames = []
-    fTestFilenames.append('0feat')
-    fTestFilenames.append('1feat')
-    fTestFilenames.append('2feat')
-
     featuresTimestamps.clear()
 
     # instance tridy channelDataClass
@@ -195,13 +165,6 @@ def get_NN_data():
     # ----------------------------------------------------
     #                 LABELS - TESTING
     # ----------------------------------------------------
-
-    lTestPath = 'data/dataZdenek/test/'
-
-    lTestFilenames = []
-    lTestFilenames.append('0lab')
-    lTestFilenames.append('1lab')
-    lTestFilenames.append('2lab')
 
     for index, lFilename in enumerate(lTestFilenames):
         print("lTestFilename: ", lFilename)
@@ -335,21 +298,14 @@ def get_NN_data():
     print("All testing data for NN: ", allTestDataForNN)
     print("All testing labels for NN", allTestLabelsForNN)
 
-    # ________________________________________
-    # Ulozeni vstupnich poli do NN do  JSON souboru
-
-    np.save("data/dataZdenek/featuresForNN", allDataForNN)
-    np.save("data/dataZdenek/labelsForNN", allLabelsForNN)
-    np.save("data/dataZdenek/testFeaturesForNN", allTestDataForNN)
-    np.save("data/dataZdenek/testLabelsForNN", allTestLabelsForNN)
 
     return allDataForNN, allLabelsForNN, allTestDataForNN, allTestLabelsForNN
 
 
 
-#___________________________________________________________________________________________________________
+#_______________________________________________________________________________________________________________________
 #                                                    MAIN
-#___________________________________________________________________________________________________________
+#_______________________________________________________________________________________________________________________
 
 # vybrani, kterou sadu challengi chceme trenovat:
 # prvni: delani cinnosti (do_it)
@@ -360,15 +316,14 @@ challengeSet = 'think_closed'
 # nastaveni elektrod, ze kterych se zpracuji data
 # musi byt list i v pripade jednoho channelu
 channels = [1,2,3,4,5,6,7,8]
-
 # listy instanci trid
 EEGdata = []
 EEGlabels = []
 
-featuresTimestamps = []
-
 EEGtestData = []
 EEGTestlabels = []
+
+featuresTimestamps = []
 
 
 # data spojene z vice nahravani
@@ -376,16 +331,103 @@ allDataForNN = []
 allLabelsForNN = []
 allTestDataForNN = []
 allTestLabelsForNN = []
+
 # pokud jsou vstupni data do NN ze souboru -> loadDataForNN == True
 loadDataForNN = True
+
+
+
+# cesta k features
+fPath = 'data/dataZdenek/train/'
+# nazev souboru s features
+fFilenames = []
+fFilenames.append('0feat')
+fFilenames.append('1feat')
+fFilenames.append('2feat')
+fFilenames.append('3feat')
+fFilenames.append('4feat')
+fFilenames.append('5feat')
+
+# cesta k labels
+lPath = 'data/dataZdenek/train/'
+lFilenames = []
+lFilenames.append('0lab')
+lFilenames.append('1lab')
+lFilenames.append('2lab')
+lFilenames.append('3lab')
+lFilenames.append('4lab')
+lFilenames.append('5lab')
+
+# cesta k features
+fTestPath = 'data/dataZdenek/test/'
+# nazev souboru s features
+fTestFilenames = []
+fTestFilenames.append('0feat')
+fTestFilenames.append('1feat')
+fTestFilenames.append('2feat')
+
+
+lTestPath = 'data/dataZdenek/test/'
+lTestFilenames = []
+lTestFilenames.append('0lab')
+lTestFilenames.append('1lab')
+lTestFilenames.append('2lab')
+
+#_________________________________________________
+# TASKS
+#_________________________________________________
+task = 5
+
+#TASK 1
+# vzit veskera data ze vsech souboru, provest filtrovani, fft, rozdelit do ramcu
+# pred predanim NN rozdelit v pomeru 85% trenovaci 15% testovaci
+if task == 1:
+    print("Experiment 1")
+
+    if loadDataForNN == False:
+
+        print("Vstupní pole do NN budou nově vytvořena")
+
+        fPath = 'data/tasks/src/'
+        fFilenames.extend(['0feat','1feat','2feat','3feat','4feat','5feat', '6feat', '7feat', '8feat'])
+        print("Zpracovávané features (názvy souborů): ", fFilenames)
+
+        lPath = 'data/tasks/src/'
+        lFilenames.extend(['0lab', '1lab', '2lab', '3lab', '4lab', '5lab', '6lab', '7lab', '8lab'])
+        print("Zpracovávané labels (názvy souborů): ", lFilenames)
+
+        allDataForNN, allLabelsForNN, allTestDataForNN, allTestLabelsForNN = get_NN_data()
+
+        # nahodne zamichani vsech dat
+        randomize = np.arange(len(allDataForNN))
+        np.random.shuffle(randomize)
+        allDataForNN = allDataForNN[randomize]
+        allLabelsForNN = allLabelsForNN[randomize]
+
+        # rozdeleni dat na trenovaci a testovaci
+
+        # ________________________________________
+        # Ulozeni vstupnich poli do NN do numpy array souboru
+        np.save("data/tasks/task1/forNN/featuresForNN", allDataForNN)
+        np.save("data/tasks/task1/forNN/labelsForNN", allLabelsForNN)
+        np.save("data/task1/forNN/testFeaturesForNN", allTestDataForNN)
+        np.save("data/task1/forNN/testLabelsForNN", allTestLabelsForNN)
+    else:
+        print("Načínání vstupních polí do NN z připravených souborů...")
+
+elif task == 2:
+    print("Experiment 2")
+elif task == 3:
+    print("Experiment 3")
+#______________________________________________
 
 if loadDataForNN == True:
 
     print("Načítání dat...")
-    allDataForNN = np.load("data/dataZdenek/featuresForNN.npy")
-    allLabelsForNN = np.load("data/dataZdenek/labelsForNN.npy")
-    allTestDataForNN = np.load("data/dataZdenek/testFeaturesForNN.npy")
-    allTestLabelsForNN = np.load("data/dataZdenek/testLabelsForNN.npy")
+    allDataForNN = np.load("data/dataZdenek/forNN/featuresForNN.npy")
+    allLabelsForNN = np.load("data/dataZdenek/forNN/labelsForNN.npy")
+    allTestDataForNN = np.load("data/dataZdenek/forNN/testFeaturesForNN.npy")
+    allTestLabelsForNN = np.load("data/dataZdenek/forNN/testLabelsForNN.npy")
     print("Data úspěšně načtena!")
 
     print("Loaded data for NN: ", allDataForNN)
@@ -394,10 +436,17 @@ if loadDataForNN == True:
     #allTestDataForNN = allDataForNN
     #allTestLabelsForNN = allLabelsForNN
 
-
 else:
     allDataForNN, allLabelsForNN, allTestDataForNN, allTestLabelsForNN = get_NN_data()
 
+    # ________________________________________
+    # Ulozeni vstupnich poli do NN do numpy array souboru
+    np.save("data/dataZdenek/forNN/featuresForNN", allDataForNN)
+    np.save("data/dataZdenek/forNN/labelsForNN", allLabelsForNN)
+    np.save("data/dataZdenek/forNN/testFeaturesForNN", allTestDataForNN)
+    np.save("data/dataZdenek/forNN/testLabelsForNN", allTestLabelsForNN)
+
+    print()
 
 # _______________________________________
 # Zkusebni NN
@@ -412,12 +461,14 @@ else:
 #np.random.seed(7)
 
 model = Sequential()
-model.add(Dense(3000, activation='sigmoid', input_shape=(64*len(channels),)))
-model.add(Dense(1500, activation='sigmoid'))
-model.  add(Dense(3, activation='softmax'))
+model.add(Dense(300, activation='sigmoid', input_shape=(3*64*len(channels),)))
+model.add(Dense(150, activation='sigmoid'))
+#model.add(Dense(300, activation='sigmoid'))
+#model.add(Dense(20, activation='sigmoid'))
+model.add(Dense(3, activation='softmax'))
 
 model.compile(optimizer='Adamax', loss='categorical_crossentropy', metrics=['accuracy'])
-model.fit(allDataForNN, allLabelsForNN, epochs=200, batch_size=1000, validation_split=0.10)
+model.fit(allDataForNN, allLabelsForNN, epochs=50, batch_size=32, validation_split=0.10)
 score = model.evaluate(allTestDataForNN, allTestLabelsForNN)
 predictions = model.predict(allTestDataForNN)
 

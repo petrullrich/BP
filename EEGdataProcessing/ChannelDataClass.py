@@ -68,14 +68,16 @@ class channelData:
 
     # doplneni tridni promenne data
     def load_json_features(self):
-
+        print("__________________")
+        print("Načítání souboru ", self.path+self.filename)
         firstTimestamp = None
         samplescount = [0]  # poctet vzorku - tzn. [1,2,3,4, ... ,n]
         seconds = []  # sekundy v kterych prichazi jednotlive vzorky (pouzito pro sanitycheck)
         channelsCount = 0
-        print(self.path+self.filename)
+
         with open(self.path+self.filename, "r") as read_file:
             JSONdata = json.load(read_file)
+
         # pro kazdy kanal, ze ktereho chceme cist data -> list v self.data
         for eachChannel in self.channels:
             channelsCount = channelsCount + 1
@@ -107,32 +109,44 @@ class channelData:
         #print("In load_json_features, self.data: ", self.data[0][0])
         #print(self.timestamps)
        # print(*self.data, sep = "\n")
+        print("Třídní proměnná \"data\" naplněna")
+        print("Počet kanálů (délka proměnné data): ", len(self.data))
 
 
-    # horni propust - filtrovani spodnich 5 Hz
+    # horni propust - filtrovani spodniho 1 Hz
     def removeDcOffset(self):
         hzCutOff = 1.0
         b, a = signal.butter(2, (hzCutOff/(self.fs/2)), 'highpass')
-        self.data = signal.lfilter(b, a, self.data, 0)
+
+        # axis=1   -> provede se pro vsechna pole (channely)
+        self.data = signal.lfilter(b, a, self.data, axis=1)
+        #print("Data after highpass: ", self.data)
 
     # pasmova zadrz - filtrovani sitoveho brumu
     def removeMainInterference(self):
         hzRange = np.array([50.0, 100.0]) #hlavni + harmonicke frekvence
+
         for eachHz in np.nditer(hzRange):
             bandstopHz = eachHz + 3.0 * np.array([-1, 1]) # nastaveni pasmove zadrze
             b, a = signal.butter(3, (bandstopHz/(self.fs/2.0)), 'bandstop')
-            self.data = signal.lfilter(b, a, self.data, 0)
+            # axis=1   -> provede se pro vsechna pole (channely)
+            self.data = signal.lfilter(b, a, self.data, axis=1)
+            #print("Data after bandstop: ", self.data)
 
     # challengesAttributes - list listu -> prvni hodnota je offset od zacatku dat, druha hodnota je delka challenge
     # challengeType - typ challenge, pro kterou funkci volame -
     def processData(self, challengesAttributes, challengeType, channelsCount):
 
+        setOfThreeFrames = []
+        framesCounter = 0
         # pro kazdou challenge
         for challengeAttr in challengesAttributes:
             if(len(challengeAttr) == 0):
                 break
             currentPosition = challengeAttr[0] # dosazeni offsetu dane challenge do aktualni pozice
+
             while(currentPosition + self.frameLength < (challengeAttr[0] + challengeAttr[1])):
+
                 allChannelsDataInFrame = [] # promenna pro list s jiz upravenym ramcem,v kterem jsou vsechny kanaly poskladane za sebou
 
                 for channelNumber in range(channelsCount):
@@ -155,11 +169,24 @@ class channelData:
                 # TODO - [ [64 * počet kanálů ] , [64 * počet kanálů ], [64 * počet kanálů ], [64 * počet kanálů ], ...]
                 # TODO - vylepšení ↓
                 # TODO - [ [64 * počet kanálů.64 * počet kanálů.64 * počet kanálů], [64 * počet kanálů.64 * počet kanálů.64 * počet kanálů]
-                # doplneni vstupnich dat pro NN
 
-                self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
+                if framesCounter < 3:
+                    setOfThreeFrames = setOfThreeFrames + allChannelsDataInFrame
+                    framesCounter += 1
+                else:
+                    #print("Delka setOfThreeFrames: ", len(setOfThreeFrames))
+                    # vynulovani counteru
+                    framesCounter = 0
 
-                self.labelsForNN.append(copy.deepcopy(challengeType))
+                    # doplneni vstupnich dat pro NN
+                    #self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
+                    # nove doplneni tri ramcu v jednom poli namisto jednoho
+                    self.dataForNN.append(copy.deepcopy(setOfThreeFrames))
+
+                    self.labelsForNN.append(copy.deepcopy(challengeType))
+
+                    # vynulovani listu, kde jsou umistejny 3 ramce
+                    setOfThreeFrames = []
 
 
                 #print('allChannelsDataInFrame: ', allChannelsDataInFrame)
@@ -170,8 +197,8 @@ class channelData:
             #print("dataForNN", self.dataForNN)
             #print(*self.dataForNN, sep="\n")
 
-            #print("Delka promenne dataForNN: ", len(self.dataForNN))
-            #print("labelsForNN: ", self.labelsForNN)
+            print("Delka promenne dataForNN: ", len(self.dataForNN))
+            print("labelsForNN: ", self.labelsForNN)
             #print("Delka promenne labelsForNN: ", len(self.labelsForNN))
 
     # zpracovani daneho ramce:
