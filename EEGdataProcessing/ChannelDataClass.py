@@ -121,6 +121,7 @@ class channelData:
         # axis=1   -> provede se pro vsechna pole (channely)
         self.data = signal.lfilter(b, a, self.data, axis=1)
         #print("Data after highpass: ", self.data)
+        print("Na data byl aplikován filtr horní propust (",hzCutOff, " Hz )")
 
     # pasmova zadrz - filtrovani sitoveho brumu
     def removeMainInterference(self):
@@ -132,6 +133,7 @@ class channelData:
             # axis=1   -> provede se pro vsechna pole (channely)
             self.data = signal.lfilter(b, a, self.data, axis=1)
             #print("Data after bandstop: ", self.data)
+        print("Na data byl aplikován filtr pasmová zádrž (",hzRange, " Hz )")
 
     # challengesAttributes - list listu -> prvni hodnota je offset od zacatku dat, druha hodnota je delka challenge
     # challengeType - typ challenge, pro kterou funkci volame -

@@ -184,9 +184,30 @@ def get_NN_data():
 
     print("Len of allTestDataForNN: ", len(allTestDataForNN))
 
-    # __________________________________________________________________________________________
-    # pro vstupni data ->
-    # odstraneni prebytecnych ramcu - tzn. pro kazdou tridu stejny pocet ramcu
+
+
+    # prevedeni na numpy array, kvuli NN
+    allLabelsForNN = np.array(allLabelsForNN)
+    allDataForNN = np.array(allDataForNN)
+    print("Len of allDataForNN (np array): ", len(allDataForNN))
+    print("All data for NN: ", allDataForNN)
+    print("All labels for NN", allLabelsForNN)
+
+    allTestLabelsForNN = np.array(allTestLabelsForNN)
+    allTestDataForNN = np.array(allTestDataForNN)
+    print("Len of allTestingDataForNN (np array): ", len(allTestDataForNN))
+    print("All testing data for NN: ", allTestDataForNN)
+    print("All testing labels for NN", allTestLabelsForNN)
+
+
+    return allDataForNN, allLabelsForNN, allTestDataForNN, allTestLabelsForNN
+
+# __________________________________________________________________________________________
+# pro trenovaci vstupni data ->
+# VYVAZOVANI TRID
+# odstraneni prebytecnych ramcu - tzn. pro kazdou tridu stejny pocet ramcu
+
+def balance_classes():
 
     leftTraining = 0
     rightTraining = 0
@@ -285,46 +306,18 @@ def get_NN_data():
     print("After reduce: right: ", rightTraining)
     print("After reduce: pause: ", pauseTraining)
 
-    # prevedeni na numpy array, kvuli NN
-    allLabelsForNN = np.array(allLabelsForNN)
-    allDataForNN = np.array(allDataForNN)
-    print("Len of allDataForNN (np array): ", len(allDataForNN))
-    print("All data for NN: ", allDataForNN)
-    print("All labels for NN", allLabelsForNN)
-
-    allTestLabelsForNN = np.array(allTestLabelsForNN)
-    allTestDataForNN = np.array(allTestDataForNN)
-    print("Len of allTestingDataForNN (np array): ", len(allTestDataForNN))
-    print("All testing data for NN: ", allTestDataForNN)
-    print("All testing labels for NN", allTestLabelsForNN)
-
-
-    return allDataForNN, allLabelsForNN, allTestDataForNN, allTestLabelsForNN
-
-
 
 #_______________________________________________________________________________________________________________________
 #                                                    MAIN
 #_______________________________________________________________________________________________________________________
-
-# vybrani, kterou sadu challengi chceme trenovat:
-# prvni: delani cinnosti (do_it)
-# druha: mysleni s otevrenyma ocima (think_open)
-# treti: mysleni se zavrenyma ocima (think_closed)
-challengeSet = 'think_closed'
-
-# nastaveni elektrod, ze kterych se zpracuji data
-# musi byt list i v pripade jednoho channelu
-channels = [1,2,3,4,5,6,7,8]
 # listy instanci trid
 EEGdata = []
 EEGlabels = []
 
 EEGtestData = []
 EEGTestlabels = []
-
+# list timestamu z features
 featuresTimestamps = []
-
 
 # data spojene z vice nahravani
 allDataForNN = []
@@ -332,51 +325,29 @@ allLabelsForNN = []
 allTestDataForNN = []
 allTestLabelsForNN = []
 
+# pole nazvu sfeeatures a labels
+fFilenames = []
+lFilenames = []
+
+fTestFilenames = []
+lTestFilenames = []
+
+# nastaveni elektrod, ze kterych se zpracuji data
+# musi byt list i v pripade jednoho channelu
+channels = [1,2,3,4,5,6,7,8]
+
+# vybrani, kterou sadu challengi chceme trenovat:
+# prvni: delani cinnosti (do_it)
+# druha: mysleni s otevrenyma ocima (think_open)
+# treti: mysleni se zavrenyma ocima (think_closed)
+challengeSet = 'think_closed'
+
 # pokud jsou vstupni data do NN ze souboru -> loadDataForNN == True
 loadDataForNN = True
-
-
-
-# cesta k features
-fPath = 'data/dataZdenek/train/'
-# nazev souboru s features
-fFilenames = []
-fFilenames.append('0feat')
-fFilenames.append('1feat')
-fFilenames.append('2feat')
-fFilenames.append('3feat')
-fFilenames.append('4feat')
-fFilenames.append('5feat')
-
-# cesta k labels
-lPath = 'data/dataZdenek/train/'
-lFilenames = []
-lFilenames.append('0lab')
-lFilenames.append('1lab')
-lFilenames.append('2lab')
-lFilenames.append('3lab')
-lFilenames.append('4lab')
-lFilenames.append('5lab')
-
-# cesta k features
-fTestPath = 'data/dataZdenek/test/'
-# nazev souboru s features
-fTestFilenames = []
-fTestFilenames.append('0feat')
-fTestFilenames.append('1feat')
-fTestFilenames.append('2feat')
-
-
-lTestPath = 'data/dataZdenek/test/'
-lTestFilenames = []
-lTestFilenames.append('0lab')
-lTestFilenames.append('1lab')
-lTestFilenames.append('2lab')
-
 #_________________________________________________
 # TASKS
 #_________________________________________________
-task = 5
+task = 1
 
 #TASK 1
 # vzit veskera data ze vsech souboru, provest filtrovani, fft, rozdelit do ramcu
@@ -404,16 +375,36 @@ if task == 1:
         allDataForNN = allDataForNN[randomize]
         allLabelsForNN = allLabelsForNN[randomize]
 
+
         # rozdeleni dat na trenovaci a testovaci
+        print("Délka dat pro testovaní před doplněním 15%: ", len(allTestDataForNN))
+        testingDataLen = int((len(allDataForNN)/100)*15)
+        print("15% ze všech dat je: ", testingDataLen)
+        print("Celkova delka dat: ", len(allDataForNN))
+        allTestDataForNN = allDataForNN[-testingDataLen:] # zkopirovani poslednich 15% dat
+        print("Délka dat pro testovaní po doplnění 15%: ", len(allTestDataForNN))
+        allDataForNN = allDataForNN[0:-testingDataLen] #odstraneni posledich 15%
+        print("Délka dat pro trénování: ", len(allDataForNN))
+
+        allTestLabelsForNN = allLabelsForNN[-testingDataLen:] # zkopirovani poslednich 15% dat
+        allLabelsForNN = allLabelsForNN[0:-testingDataLen] #odstraneni posledich 15%
+        
+        balance_classes()
 
         # ________________________________________
         # Ulozeni vstupnich poli do NN do numpy array souboru
-        np.save("data/tasks/task1/forNN/featuresForNN", allDataForNN)
-        np.save("data/tasks/task1/forNN/labelsForNN", allLabelsForNN)
-        np.save("data/task1/forNN/testFeaturesForNN", allTestDataForNN)
-        np.save("data/task1/forNN/testLabelsForNN", allTestLabelsForNN)
+        np.save("data/tasks/task1/forNN/"+challengeSet+"/featuresForNN", allDataForNN)
+        np.save("data/tasks/task1/forNN/"+challengeSet+"/labelsForNN", allLabelsForNN)
+        np.save("data/tasks/task1/forNN/"+challengeSet+"/testFeaturesForNN", allTestDataForNN)
+        np.save("data/tasks/task1/forNN/"+challengeSet+"/testLabelsForNN", allTestLabelsForNN)
+
     else:
         print("Načínání vstupních polí do NN z připravených souborů...")
+
+        allDataForNN = np.load("data/tasks/task1/forNN/"+challengeSet+"/featuresForNN.npy")
+        allLabelsForNN = np.load("data/tasks/task1/forNN/"+challengeSet+"/labelsForNN.npy")
+        allTestDataForNN = np.load("data/tasks/task1/forNN/"+challengeSet+"/testFeaturesForNN.npy")
+        allTestLabelsForNN = np.load("data/tasks/task1/forNN/"+challengeSet+"/testLabelsForNN.npy")
 
 elif task == 2:
     print("Experiment 2")
@@ -421,7 +412,7 @@ elif task == 3:
     print("Experiment 3")
 #______________________________________________
 
-if loadDataForNN == True:
+if loadDataForNN == True and 0 == 1:
 
     print("Načítání dat...")
     allDataForNN = np.load("data/dataZdenek/forNN/featuresForNN.npy")
@@ -433,10 +424,48 @@ if loadDataForNN == True:
     print("Loaded data for NN: ", allDataForNN)
     print("Loaded labels for NN", allLabelsForNN)
 
+    a = np.arange(10)
+    print("a: ", a)
+    dvojka = 2
+    b = a[-dvojka:]
+    a = a[0:-2]
+
+    print("a: ", a)
+    print("b: ", b)
     #allTestDataForNN = allDataForNN
     #allTestLabelsForNN = allLabelsForNN
 
-else:
+elif loadDataForNN == False and 0 == 1:
+
+    # cesta k labels
+    # cesta k features
+    fPath = 'data/dataZdenek/train/'
+    lPath = 'data/dataZdenek/train/'
+    fTestPath = 'data/dataZdenek/test/'
+    lTestPath = 'data/dataZdenek/test/'
+
+    fFilenames.append('0feat')
+    fFilenames.append('1feat')
+    fFilenames.append('2feat')
+    fFilenames.append('3feat')
+    fFilenames.append('4feat')
+    fFilenames.append('5feat')
+
+    lFilenames.append('0lab')
+    lFilenames.append('1lab')
+    lFilenames.append('2lab')
+    lFilenames.append('3lab')
+    lFilenames.append('4lab')
+    lFilenames.append('5lab')
+
+    fTestFilenames.append('0feat')
+    fTestFilenames.append('1feat')
+    fTestFilenames.append('2feat')
+
+    lTestFilenames.append('0lab')
+    lTestFilenames.append('1lab')
+    lTestFilenames.append('2lab')
+
     allDataForNN, allLabelsForNN, allTestDataForNN, allTestLabelsForNN = get_NN_data()
 
     # ________________________________________
@@ -449,9 +478,9 @@ else:
     print()
 
 # _______________________________________
-# Zkusebni NN
-
-
+# sumarizace vstupnich dat do NN
+print("Delka trenovacích dat: ",len(allDataForNN))
+print("Delka testovacích  dat: ",len(allTestLabelsForNN))
 
 # __________________________________________________________________________________________
 # keras model
@@ -468,7 +497,7 @@ model.add(Dense(150, activation='sigmoid'))
 model.add(Dense(3, activation='softmax'))
 
 model.compile(optimizer='Adamax', loss='categorical_crossentropy', metrics=['accuracy'])
-model.fit(allDataForNN, allLabelsForNN, epochs=50, batch_size=32, validation_split=0.10)
+model.fit(allDataForNN, allLabelsForNN, epochs=10, batch_size=32, validation_split=0.10)
 score = model.evaluate(allTestDataForNN, allTestLabelsForNN)
 predictions = model.predict(allTestDataForNN)
 
