@@ -35,6 +35,8 @@ class channelData:
         self.testingDataForNN = []
         # list listu - vstup do neur. s. (labels) - TESTOVACI
         self.testingLabelsForNN = []
+        # list v kterem jsou indexy koncu jednotlivych challengi
+        self.challengeEnd = []
 
     # upraveni souboru s features od Zdenka
     def repairFeatures(self):
@@ -202,6 +204,9 @@ class channelData:
             print("Delka promenne dataForNN: ", len(self.dataForNN))
             print("labelsForNN: ", self.labelsForNN)
             #print("Delka promenne labelsForNN: ", len(self.labelsForNN))
+
+        print("Index konce challenge v listu dataForNN: ", len(self.dataForNN))
+        self.challengeEnd.append(len(self.dataForNN))
 
     # zpracovani daneho ramce:
     # fourierova transformace -> zahozeni druhe poloviny dat -> absolutni hodnota
