@@ -17,8 +17,8 @@ def predictions_three_classes():
     # ----------------------------------------------
     # vyhodnoceni predikci
 
-    print("predictions: ", predictions)
-    print("len of predict", len(predictions))
+    #print("predictions: ", predictions)
+    print("Len of predictions: ", len(predictions))
 
     left = 0
     right = 0
@@ -36,7 +36,17 @@ def predictions_three_classes():
     rightCorrect = 0
     pauseCorrect = 0
     correct = 0
+
+
     wrong = 0
+    rightInsteadLeft = 0
+    pauseInsteadLeft = 0
+
+    leftInsteadRight = 0
+    pauseInsteadRight = 0
+
+    leftInsteadPause = 0
+    rightInsteadPause = 0
 
     for i in range(len(predictions)):
         if np.argmax(NN.allTestLabelsForNN[i]) == np.argmax(predictions[i]):
@@ -53,6 +63,74 @@ def predictions_three_classes():
         else:
             wrong += 1
 
+            shouldBeIndex = np.argmax(NN.allTestLabelsForNN[i])
+            predictedIndex = np.argmax(predictions[i])
+
+            if shouldBeIndex == 0:
+                if predictedIndex == 1: rightInsteadLeft += 1
+                elif predictedIndex == 2: pauseInsteadLeft += 1
+            elif shouldBeIndex == 1:
+                if predictedIndex == 0: leftInsteadRight += 1
+                elif predictedIndex == 2: pauseInsteadRight += 1
+            elif shouldBeIndex == 2:
+                if predictedIndex == 0: leftInsteadPause += 1
+                elif predictedIndex == 1: rightInsteadPause += 1
+
+
+
+
+    #acc = sum([np.argmax(NN.allTestLabelsForNN[i]) == np.argmax(predictions[i]) for i in range(len(predictions))]) / len(predictions)
+
+    print("Přesnost (accuracy): ", (correct / len(predictions)) * 100)
+    print("__________________")
+    print("Počet správných predikcí: ", correct)
+    print("Levá: ", leftCorrect, "z", left)
+    print("Pravá: ", rightCorrect, "z", right)
+    print("Pauza: ", pauseCorrect, "z", pause)
+    print("--------")
+    print("Počet špatných predikcí: ", wrong, ", z toho:")
+    print("Pravá místo levé: ", rightInsteadLeft)
+    print("Pauza místo levé: ", pauseInsteadLeft)
+    print("")
+    print("Levá místo pravé: ", leftInsteadRight)
+    print("Pauza místo pravé: ", pauseInsteadRight)
+    print("")
+    print("Levá místo pauzy: ", leftInsteadPause)
+    print("Pravá místo pauzy: ", rightInsteadPause)
+
+def predictions_two_classes():
+    # ----------------------------------------------
+    # vyhodnoceni predikci
+
+    print("predictions: ", predictions)
+    print("len of predict", len(predictions))
+
+    do = 0
+    pause = 0
+
+    for label in NN.allTestLabelsForNN:
+        if label[0] == 1:
+            do += 1
+        elif label[1] == 1:
+            pause += 1
+
+    doCorrect = 0
+    pauseCorrect = 0
+    correct = 0
+    wrong = 0
+
+    for i in range(len(predictions)):
+        if np.argmax(NN.allTestLabelsForNN[i]) == np.argmax(predictions[i]):
+            indexOfMax = np.argmax(NN.allTestLabelsForNN[i])
+            if indexOfMax == 0:
+                doCorrect += 1
+                correct += 1
+            elif indexOfMax == 1:
+                pauseCorrect += 1
+                correct += 1
+        else:
+            wrong += 1
+
     acc = sum(
         [np.argmax(NN.allTestLabelsForNN[i]) == np.argmax(predictions[i]) for i in range(len(predictions))]) / len(
         predictions)
@@ -60,20 +138,21 @@ def predictions_three_classes():
     print("new acc: ", acc)
 
     print("correct: ", correct)
-    print("leva: ", leftCorrect, "z", left)
-    print("prava: ", rightCorrect, "z", right)
-    print("pause: ", pauseCorrect, "z", pause)
+    print("činnost: ", doCorrect, "z", do)
+    print("pauza: ", pauseCorrect, "z", pause)
     print("acc from predict: ", (correct / len(predictions)) * 100)
-    print("wrong: ", wrong)
+    print("špatně: ", wrong)
 
 #_____________________________________________________________________________________________________________________
 # MAIN
 
 # instance tridy NNdata
-
 NN = NNdataClass.NNdata()
 
 
+
+
+#________________________________________________________________
 # nastaveni potrebnych promennych tridy
 
 # vybrani, kterou sadu challengi chceme trenovat:
@@ -81,19 +160,34 @@ NN = NNdataClass.NNdata()
 # druha: mysleni s otevrenyma ocima (think_open)
 # treti: mysleni se zavrenyma ocima (think_closed)
 
-NN.challengeSet = 'think_closed'
+NN.challengeSet = 'do_it'
 
-NN.loadDataForNN = False
-
-#NN.task_2('split_5')
+NN.loadDataForNN = True
+NN.typeOfClasses = 1
+#NN.task_2('split_4')
 NN.task_1()
 
 
 
 
 
+leftTraining = 0
+rightTraining = 0
+pauseTraining = 0
+
+for label in NN.allLabelsForNN:
+    if label[0] == 1:
+        leftTraining += 1
+    elif label[1] == 1:
+        rightTraining += 1
+    elif label[2] == 1:
+        pauseTraining += 1
+
+
 # _______________________________________________________________
 # sumarizace vstupnich dat do NN
+
+
 
 print("______________________________")
 print("Sumarizace vstupních dat do NN (numpy array)")
@@ -105,6 +199,11 @@ print("--------")
 print("Delka testovacích  dat: ",len(NN.allTestDataForNN))
 print("Testovací features pro NN: ", NN.allTestDataForNN)
 print("TEstovací labels pro NN", NN.allTestLabelsForNN)
+
+print("--------")
+print("Vstup do NN - levá: ", leftTraining)
+print("Vstup do NN - levá: ", rightTraining)
+print("Vstup do NN - levá: ", pauseTraining)
 print("______________________________")
 
 # __________________________________________________________________________________________
@@ -132,6 +231,7 @@ print(model.metrics_names[1], score[1])
 print(model.metrics_names[0], score[0])
 
 
-predictions_three_classes()
 
+
+predictions_three_classes()
 

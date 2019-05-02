@@ -65,6 +65,12 @@ class NNdata:
 
         self.challengeEnd = []
 
+        # typ rozdeleni trid
+        # 1 - tri tridy: leva, prava, nic nedelani
+        # 2 - dve tridy: cinnost (leva+prava), nic nedelani
+        # todo 3 - dve tridy: leva, prava
+        self.typeOfClasses = 1
+
 
     # TASK 1
     # vzit veskera data ze vsech souboru, provest filtrovani, fft, rozdelit do ramcu
@@ -89,11 +95,6 @@ class NNdata:
             NNdata.get_NN_data(self)
 
 
-            # nahodne zamichani vsech dat PRO NUMPY ARRAY
-            #randomize = np.arange(len(self.allDataForNN))
-            #np.random.shuffle(randomize)
-            #self.allDataForNN = self.allDataForNN[randomize]
-            #self.allLabelsForNN = self.allLabelsForNN[randomize]
 
             # nahodne zamichani vsech dat (PYTHON LIST)
             mixed = list(zip(self.allDataForNN, self.allLabelsForNN))
@@ -104,11 +105,15 @@ class NNdata:
             print("___________")
             print("Proběhlo zamíchání vstupních dat!")
 
+
+
+
             # rozdeleni dat na trenovaci a testovaci
             print("Délka dat pro testovaní před doplněním 15%: ", len(self.allTestDataForNN))
             testingDataLen = int((len(self.allDataForNN)/100)*15)
             print("15% ze všech dat je: ", testingDataLen)
             print("Celkova delka dat: ", len(self.allDataForNN))
+
             # inicializace testovacich dat
             self.allTestDataForNN = self.allDataForNN[-testingDataLen:] # zkopirovani poslednich 15% dat
             print("Délka dat pro testovaní po doplnění 15%: ", len(self.allTestDataForNN))
@@ -118,6 +123,8 @@ class NNdata:
             # inicializace testovacich dat
             self.allTestLabelsForNN = self.allLabelsForNN[-testingDataLen:] # zkopirovani poslednich 15% dat
             self.allLabelsForNN = self.allLabelsForNN[0:-testingDataLen] #odstraneni posledich 15%
+
+
 
             NNdata.balance_classes(self)
             NNdata.lists_to_numpy_arrays(self)
@@ -200,7 +207,7 @@ class NNdata:
                 # TESTING
                 self.fTestFilenames.extend(['6feat', '3feat'])
                 self.lTestFilenames.extend(['6lab', '3lab'])
-            elif split == 'split_5':
+            else:
                 # TRAINING
                 self.fFilenames.extend(['0feat', '1feat', '7feat', '3feat', '4feat', '5feat', '6feat'])
                 self.lFilenames.extend(['0lab', '1lab', '7lab', '3lab', '4lab', '5lab', '6lab'])
@@ -411,14 +418,6 @@ class NNdata:
             challengeNumbers = ['1', '4']
 
 
-
-        # typ rozdeleni trid
-        # 1 - tri tridy: leva, prava, nic nedelani
-        # 2 - dve tridy: cinnost (leva+prava), nic nedelani
-        # todo 3 - dve tridy: leva, prava
-        typeOfClasses = 1
-
-
         for ch in challengeNumbers:
             # leva ruka
             if ch == challengeNumbers[0]:
@@ -437,7 +436,7 @@ class NNdata:
                 # x == 1 && y==0 && z==0 -> leva ruka
                 # x == 0 && y==1 && z==0 -> prava ruka
                 # x == 0 && y==0 && z==1 -> nic nedelani (priprava + odpocinek)
-                if typeOfClasses == 1:
+                if self.typeOfClasses == 1:
                     challengeTypeBinary = [0, 0, 0]
                     # stage 1 - priprava
                     if i == 1:
@@ -465,7 +464,7 @@ class NNdata:
                 # [x,y]
                 # x == 1 && y==0 -> cinnost (leva+prava)
                 # x == 0 && y==1 -> nic nedelani (priprava + odpocinek)
-                elif typeOfClasses == 2:
+                elif self.typeOfClasses == 2:
                     challengeTypeBinary = [0, 0]
                     # stage 1 - priprava
                     if i == 1:
