@@ -3,12 +3,13 @@
 import  ChallengeClass
 import ChannelDataClass
 import NNdataClass
+import EEGstreamClass
 
 import json
 import numpy as np
 import random
 
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Dense, Activation
 from keras.metrics import categorical_accuracy
 
@@ -143,6 +144,7 @@ def predictions_two_classes():
     print("acc from predict: ", (correct / len(predictions)) * 100)
     print("špatně: ", wrong)
 
+
 #_____________________________________________________________________________________________________________________
 # MAIN
 
@@ -150,19 +152,25 @@ def predictions_two_classes():
 NN = NNdataClass.NNdata()
 
 
+EEGstream = EEGstreamClass.EEGstream()
+#EEGstream.stream()
+
 
 
 #________________________________________________________________
 # nastaveni potrebnych promennych tridy
+
+NN.channels = [1,2,3,4,5,6,7,8]
 
 # vybrani, kterou sadu challengi chceme trenovat:
 # prvni: delani cinnosti (do_it)
 # druha: mysleni s otevrenyma ocima (think_open)
 # treti: mysleni se zavrenyma ocima (think_closed)
 
-NN.challengeSet = 'do_it'
+NN.challengeSet = 'think_closed'
 
-NN.loadDataForNN = True
+NN.loadDataForNN = False
+
 NN.typeOfClasses = 1
 #NN.task_2('split_4')
 NN.task_1()
@@ -197,6 +205,7 @@ print("Trénovací labels pro NN", NN.allLabelsForNN)
 
 print("--------")
 print("Delka testovacích  dat: ",len(NN.allTestDataForNN))
+print("Delka na indexu 0: ", len(NN.allTestDataForNN[0]))
 print("Testovací features pro NN: ", NN.allTestDataForNN)
 print("TEstovací labels pro NN", NN.allTestLabelsForNN)
 
@@ -214,8 +223,8 @@ print("______________________________")
 #np.random.seed(7)
 
 model = Sequential()
-model.add(Dense(300, activation='sigmoid', input_shape=(3*64*len(NN.channels),)))
-model.add(Dense(150, activation='sigmoid'))
+model.add(Dense(80, activation='sigmoid', input_shape=(64*len(NN.channels),)))
+model.add(Dense(25, activation='sigmoid'))
 #model.add(Dense(300, activation='sigmoid'))
 #model.add(Dense(20, activation='sigmoid'))
 model.add(Dense(3, activation='softmax'))
@@ -230,8 +239,14 @@ predictions = model.predict(NN.allTestDataForNN)
 print(model.metrics_names[1], score[1])
 print(model.metrics_names[0], score[0])
 
-
-
-
 predictions_three_classes()
+
+
+# ulozeni
+model.save('data/kerasModels/firstModel.h5')
+#del model
+
+#model = load_model('data/kerasModels/firstModel.h5')
+
+
 

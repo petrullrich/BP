@@ -119,7 +119,8 @@ class channelData:
     def removeDcOffset(self):
         hzCutOff = 1.0
         b, a = signal.butter(2, (hzCutOff/(self.fs/2)), 'highpass')
-
+        print("a: ", a)
+        print("b: ", b)
         # axis=1   -> provede se pro vsechna pole (channely)
         self.data = signal.lfilter(b, a, self.data, axis=1)
         #print("Data after highpass: ", self.data)
@@ -127,7 +128,7 @@ class channelData:
 
     # pasmova zadrz - filtrovani sitoveho brumu
     def removeMainInterference(self):
-        hzRange = np.array([50.0, 100.0]) #hlavni + harmonicke frekvence
+        hzRange = np.array([50.0, 100.0]) # hlavni + harmonicke frekvence
 
         for eachHz in np.nditer(hzRange):
             bandstopHz = eachHz + 3.0 * np.array([-1, 1]) # nastaveni pasmove zadrze
@@ -158,6 +159,8 @@ class channelData:
                     #print("len of self.data: ", len(self.data[channelNumber]))
                     #print("self.data: (currPos)", self.data[channelNumber][currentPosition])
                     #print("self.data: (currPos+frameLength)", self.data[channelNumber][currentPosition])
+
+
                     dataInFrame = self.data[channelNumber][currentPosition : (currentPosition+self.frameLength)]
                     #print("dataInFrame: ", dataInFrame)
                     # zpracovani konkretniho ramce na konkretnim kanalu
@@ -174,23 +177,23 @@ class channelData:
                 # TODO - vylepšení ↓
                 # TODO - [ [64 * počet kanálů.64 * počet kanálů.64 * počet kanálů], [64 * počet kanálů.64 * počet kanálů.64 * počet kanálů]
 
-                if framesCounter < 3:
-                    setOfThreeFrames = setOfThreeFrames + allChannelsDataInFrame
-                    framesCounter += 1
-                else:
+                #if framesCounter < 3:
+                #    setOfThreeFrames = setOfThreeFrames + allChannelsDataInFrame
+                #    framesCounter += 1
+                #else:
                     #print("Delka setOfThreeFrames: ", len(setOfThreeFrames))
                     # vynulovani counteru
-                    framesCounter = 0
+                    #framesCounter = 0
 
                     # doplneni vstupnich dat pro NN
-                    #self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
+                self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
                     # nove doplneni tri ramcu v jednom poli namisto jednoho
-                    self.dataForNN.append(copy.deepcopy(setOfThreeFrames))
+                    #self.dataForNN.append(copy.deepcopy(setOfThreeFrames))
 
-                    self.labelsForNN.append(copy.deepcopy(challengeType))
+                self.labelsForNN.append(copy.deepcopy(challengeType))
 
                     # vynulovani listu, kde jsou umistejny 3 ramce
-                    setOfThreeFrames = []
+                    #setOfThreeFrames = []
 
 
                 #print('allChannelsDataInFrame: ', allChannelsDataInFrame)

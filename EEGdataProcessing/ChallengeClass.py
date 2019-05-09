@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import copy
 import json
 
-class challange:
+class challenge:
 
     def __init__(self, filename, path):
 
@@ -84,7 +84,7 @@ class challange:
 
                 # print("Doba trvani tohoto useku: ", round(float(timestamp) - float(timestampChange)), " sekund")
                 # ----------------------------------------------------------------
-                # vytvoreni dict s id challange + zacatky a konce danych challengi
+                # vytvoreni dict s id challenge + zacatky a konce danych challengi
 
                 challengeRange[0].append(timestamp)
 
@@ -133,7 +133,7 @@ class challange:
         print('Challenges: ', self.challenges)
 
     # vrati offset a delku pro kazdou konkretni challenge v ramci sady challengi
-    def get_challange(self, challengeType, featuresTimestamps):
+    def get_challenge(self, challengeType, featuresTimestamps):
 
         challengeNumber = 0
         challengesAttributes = []
@@ -166,7 +166,7 @@ class challange:
 
                     offset += 1
 
-                # pokud existuje pocatecni timestamp pro danou challange, ale koncovy ne, doplni se jako koncovy posledni timestamp
+                # pokud existuje pocatecni timestamp pro danou challenge, ale koncovy ne, doplni se jako koncovy posledni timestamp
                 if len(challengeAttributes) == 1:
                     #print('Celkovy pocet timestampu (features): ', len(featuresTimestamps))
                     #print('Offset: ', challengeAttributes[0])

@@ -42,7 +42,7 @@ class NNdata:
 
         # nastaveni elektrod, ze kterych se zpracuji data
         # musi byt list i v pripade jednoho channelu
-        self.channels = [1,2,3,4,5,6,7,8]
+        self.channels = [1,2,3,5,6,7,8]
 
         # vybrani, kterou sadu challengi chceme trenovat:
         # prvni: delani cinnosti (do_it)
@@ -55,7 +55,6 @@ class NNdata:
         #_________________________________________________
         # TASKS
         #_________________________________________________
-        self.task = 1
 
         self.fPath = None
         self.lPath = None
@@ -404,6 +403,10 @@ class NNdata:
         list1 = np.array(list1)
         print(list1)
 
+    # NASTAVI veskera data z jednoho souboru do vstupnich numpy poli do NN
+    # todo - udelat funkci set_all_data_for_two_classes pro novy typ vstupniho souboru, kde jsou pouze dve tridy
+    # todo - nebude volat funkci get_challenge, ale novou funkci, ktera vrati stejne parametry ->
+    # todo - challengeAttributes
     def set_all_data(self, dataType, challengeSet, index):
 
         challengeNumbers = ['3','6'] # defaultní hodnota
@@ -484,18 +487,13 @@ class NNdata:
                 print('ChallengeType: ', challengeType)
                 print('ChallengeTypeBinary: ', challengeTypeBinary)
                 if dataType == 'training':
-                    challengesAttributes = self.EEGlabels[index].get_challange(challengeType,
-                                                               self.featuresTimestamps[index])  # ziskani ofsetu a delky dane challenge
+                    challengesAttributes = self.EEGlabels[index].get_challenge(challengeType, self.featuresTimestamps[index])  # ziskani ofsetu a delky dane challenge
 
-                    self.EEGdata[index].processData(challengesAttributes, challengeTypeBinary,
-                                               len(self.channels))  # zpracovani dat pro danou challenge
+                    self.EEGdata[index].processData(challengesAttributes, challengeTypeBinary, len(self.channels))  # zpracovani dat pro danou challenge
                 elif dataType == 'testing':
-                    challengesAttributes = self.EEGTestlabels[index].get_challange(challengeType,
-                                                                          self.featuresTimestamps[
-                                                                              index])  # ziskani ofsetu a delky dane challenge
+                    challengesAttributes = self.EEGTestlabels[index].get_challenge(challengeType, self.featuresTimestamps[index])  # ziskani ofsetu a delky dane challenge
 
-                    self.EEGtestData[index].processData(challengesAttributes, challengeTypeBinary,
-                                               len(self.channels))  # zpracovani dat pro danou challenge
+                    self.EEGtestData[index].processData(challengesAttributes, challengeTypeBinary, len(self.channels))  # zpracovani dat pro danou challenge
                 else:
                     print('Zadejte správný typ dat (training/testing)')
 
@@ -518,7 +516,7 @@ class NNdata:
             self.EEGdata.append(ChannelDataClass.channelData(self.channels, fFilename, self.fPath))
             # upraveni souboru s features od Zdenka
             # EEGdata[index].repairFeatures()
-            # nacteni souboru s features a dpolneni tridni promenne data
+            # nacteni souboru s features a doplneni tridni promenne data
             self.EEGdata[index].load_json_features()
 
             self.featuresTimestamps.append(self.EEGdata[index].timestamps)
@@ -533,7 +531,7 @@ class NNdata:
         for index, lFilename in enumerate(self.lFilenames):
             print("lFilename: ", lFilename)
             # instance tridy challengeClass
-            self.EEGlabels.append(ChallengeClass.challange(lFilename, self.lPath))
+            self.EEGlabels.append(ChallengeClass.challenge(lFilename, self.lPath))
             # upraveni souboru s labely od Zdenka
             # EEGlabels[index].repairLabels()
             # nacteni souboru s labely a doplneni tridni promenne chalenges
@@ -582,7 +580,7 @@ class NNdata:
         for index, lFilename in enumerate(self.lTestFilenames):
             print("lTestFilename: ", lFilename)
             # instance tridy challengeClass
-            self.EEGTestlabels.append(ChallengeClass.challange(lFilename, self.lTestPath))
+            self.EEGTestlabels.append(ChallengeClass.challenge(lFilename, self.lTestPath))
             # upraveni souboru s labely od Zdenka
             # EEGTestlabels[index].repairLabels()
             # nacteni souboru s labely a doplneni tridni promenne chalenges
