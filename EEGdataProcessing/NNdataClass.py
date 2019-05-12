@@ -42,7 +42,7 @@ class NNdata:
 
         # nastaveni elektrod, ze kterych se zpracuji data
         # musi byt list i v pripade jednoho channelu
-        self.channels = [1,2,3,5,6,7,8]
+        self.channels = [1,2,3,4,5,6,7,8]
 
         # vybrani, kterou sadu challengi chceme trenovat:
         # prvni: delani cinnosti (do_it)

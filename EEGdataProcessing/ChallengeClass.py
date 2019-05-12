@@ -108,20 +108,6 @@ class challenge:
                 #print(challenges)
                 # ----------------------------------------------------------------
 
-                # zjisteni challenge (vyzvy)
-               # if values[0] == 1:
-                  #  print("TIMESTAMP: ", timestamp, " | Zvedni levou ruku, otevrene oci. Stage: ", stage)
-              #  elif values[0] == 2:
-                  #  print("TIMESTAMP: ", timestamp, " | Mysli na zvedani leve ruky, oci otevrene. Stage: ", stage)
-               # elif values[0] == 3:
-                   # print("TIMESTAMP: ", timestamp, " | Mysli na zvedani leve ruky oci zavrene. Stage: ", stage)
-              #  elif values[0] == 4:
-                   # print("TIMESTAMP: ", timestamp, " | Zvedni pravou ruku, otevrene oci. Stage: ", stage)
-              #  elif values[0] == 5:
-                   # print("TIMESTAMP: ", timestamp, " | Mysli na zvedani prave ruky, oci otevrene. Stage: ", stage)
-              #  else:
-                   # print("TIMESTAMP: ", timestamp, " | Mysli na zvedani prave ruky oci zavrene. Stage: ", stage)
-
                 timestampChange = timestamp
 
         # na konci je nutne doplnit rozsah posledni challenge

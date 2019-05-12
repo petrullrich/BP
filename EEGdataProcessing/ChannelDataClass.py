@@ -132,7 +132,10 @@ class channelData:
 
         for eachHz in np.nditer(hzRange):
             bandstopHz = eachHz + 3.0 * np.array([-1, 1]) # nastaveni pasmove zadrze
+            print("bandstopHz: ", bandstopHz)
             b, a = signal.butter(3, (bandstopHz/(self.fs/2.0)), 'bandstop')
+            print("a: ", a)
+            print("b: ", b)
             # axis=1   -> provede se pro vsechna pole (channely)
             self.data = signal.lfilter(b, a, self.data, axis=1)
             #print("Data after bandstop: ", self.data)

@@ -152,15 +152,15 @@ def predictions_two_classes():
 NN = NNdataClass.NNdata()
 
 
-EEGstream = EEGstreamClass.EEGstream()
-#EEGstream.stream()
-
-
-
 #________________________________________________________________
 # nastaveni potrebnych promennych tridy
 
-NN.channels = [1,2,3,4,5,6,7,8]
+NN.channels = [1,2,3,5,6,7,8]
+
+
+# STREAM instance
+EEGstream = EEGstreamClass.EEGstream()
+EEGstream.stream()
 
 # vybrani, kterou sadu challengi chceme trenovat:
 # prvni: delani cinnosti (do_it)
@@ -174,7 +174,6 @@ NN.loadDataForNN = False
 NN.typeOfClasses = 1
 #NN.task_2('split_4')
 NN.task_1()
-
 
 
 
