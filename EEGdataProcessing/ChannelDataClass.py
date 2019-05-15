@@ -117,10 +117,8 @@ class channelData:
 
     # horni propust - filtrovani spodniho 1 Hz
     def removeDcOffset(self):
-        hzCutOff = 1.0
+        hzCutOff = 3.0
         b, a = signal.butter(2, (hzCutOff/(self.fs/2)), 'highpass')
-        print("a: ", a)
-        print("b: ", b)
         # axis=1   -> provede se pro vsechna pole (channely)
         self.data = signal.lfilter(b, a, self.data, axis=1)
         #print("Data after highpass: ", self.data)
@@ -132,10 +130,7 @@ class channelData:
 
         for eachHz in np.nditer(hzRange):
             bandstopHz = eachHz + 3.0 * np.array([-1, 1]) # nastaveni pasmove zadrze
-            print("bandstopHz: ", bandstopHz)
             b, a = signal.butter(3, (bandstopHz/(self.fs/2.0)), 'bandstop')
-            print("a: ", a)
-            print("b: ", b)
             # axis=1   -> provede se pro vsechna pole (channely)
             self.data = signal.lfilter(b, a, self.data, axis=1)
             #print("Data after bandstop: ", self.data)
@@ -207,11 +202,11 @@ class channelData:
             #print("dataForNN", self.dataForNN)
             #print(*self.dataForNN, sep="\n")
 
-            print("Delka promenne dataForNN: ", len(self.dataForNN))
-            print("labelsForNN: ", self.labelsForNN)
+            #print("Delka promenne dataForNN: ", len(self.dataForNN))
+            #print("labelsForNN: ", self.labelsForNN)
             #print("Delka promenne labelsForNN: ", len(self.labelsForNN))
 
-        print("Index konce challenge v listu dataForNN: ", len(self.dataForNN))
+        #print("Index konce challenge v listu dataForNN: ", len(self.dataForNN))
         self.challengeEnd.append(len(self.dataForNN))
 
     # zpracovani daneho ramce:

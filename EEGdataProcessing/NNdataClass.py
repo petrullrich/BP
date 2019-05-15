@@ -125,8 +125,9 @@ class NNdata:
 
 
 
-            NNdata.balance_classes(self)
-            NNdata.lists_to_numpy_arrays(self)
+            self.balance_classes(self.allDataForNN, self.allLabelsForNN)
+            self.balance_classes(self.allTestDataForNN, self.allTestLabelsForNN)
+            self.lists_to_numpy_arrays()
 
             # ________________________________________
             # Ulozeni vstupnich poli do NN do numpy array souboru
@@ -228,7 +229,8 @@ class NNdata:
             # FUNKCE PRO ZPRACOVANI
 
             NNdata.get_NN_data(self)
-            NNdata.balance_classes(self)
+            NNdata.balance_classes(self, self.allDataForNN, self.allLabelsForNN)
+            self.balance_classes(self.allTestDataForNN, self.allTestLabelsForNN)
             NNdata.lists_to_numpy_arrays(self)
 
             # ________________________________________
@@ -239,7 +241,7 @@ class NNdata:
             np.save("data/tasks/task2/forNN/"+split+"/"+self.challengeSet+"/testLabelsForNN", self.allTestLabelsForNN)
 
     # TASK 3
-    # z kazdeho souboru vzit 15% (bud z konce, stredu nebo zacatku) - ty pouzit jako testovaci, zbytek jako trenovaci
+    # z kazde tridy vzit 15% - ty pouzit jako testovaci, zbytek jako trenovaci
     def task_3(self):
 
         print("Experiment 3")
@@ -259,12 +261,9 @@ class NNdata:
             NNdata.get_NN_data(self)
             NNdata.percentage_from_each_challenge(self, 15)
 
-            # funkce pro rozdeleni dat na testovaci (15%) a trenovaci (85%)
-            # parametr position urcuje, odkud se bude 15% brat - start, middle, end
-            #NNdata.split_data(self, 'middle')
 
-
-            NNdata.balance_classes(self)
+            NNdata.balance_classes(self, self.allDataForNN, self.allLabelsForNN)
+            self.balance_classes(self.allTestDataForNN, self.allTestLabelsForNN)
             NNdata.lists_to_numpy_arrays(self)
 
             # ________________________________________
@@ -337,71 +336,8 @@ class NNdata:
         print("Délka labels po odebrání 15% z každé challenge: ", len(self.allLabelsForNN))
         print("Délka testovacích labels po přidání 15% z každé challenge: ", len(self.allTestLabelsForNN))
 
-    # NEFUNKCI
-    def split_data(self, position):
-
-        # rozdeleni dat na trenovaci a testovaci
-        print("Délka dat pro testovaní před doplněním 15%: ", len(self.allTestDataForNN))
-        testingDataLen = int((len(self.allDataForNN) / 100) * 15)
-        print("15% ze všech dat je: ", testingDataLen)
-        print("Celkova delka dat: ", len(self.allDataForNN))
-        if position == 'start':
-            self.allTestDataForNN = self.allDataForNN[0:testingDataLen:]  # zkopirovani prvnich 15% dat
-            self.allDataForNN = self.allDataForNN[testingDataLen:len(self.allDataForNN)]  # odstraneni prvnich 15%
-
-            self.allTestLabelsForNN = self.allLabelsForNN[0:testingDataLen:]  # zkopirovani prvnich 15% dat
-            self.allLabelsForNN = self.allLabelsForNN[testingDataLen:len(self.allLabelsForNN)]  # odstraneni prvnich 15%
-
-        elif position == 'middle':
-            beginning = int((len(self.allDataForNN)/2))-int((testingDataLen/2))
-
-            self.allTestDataForNN = self.allDataForNN[beginning:(beginning+testingDataLen)]  # zkopirovani prostrednich 15% dat
-            self.allDataForNN = self.allDataForNN[0:beginning]+self.allDataForNN[beginning+testingDataLen:len(self.allDataForNN)]  # odstraneni prostrednich 15%
-
-            self.allTestLabelsForNN = self.allLabelsForNN[beginning:(beginning+testingDataLen)]  # zkopirovani prostrednich 15% dat
-            self.allLabelsForNN = self.allLabelsForNN[0:beginning]+self.allDataForNN[beginning+testingDataLen:len(self.allLabelsForNN)]  # odstraneni prostrednich 15%
-
-        elif position == 'end':
-            self.allTestDataForNN = self.allDataForNN[-testingDataLen:]  # zkopirovani poslednich 15% dat
-            self.allDataForNN = self.allDataForNN[0:-testingDataLen]  # odstraneni posledich 15%
-
-            self.allTestLabelsForNN = self.allLabelsForNN[-testingDataLen:]  # zkopirovani poslednich 15% dat
-            self.allLabelsForNN = self.allLabelsForNN[0:-testingDataLen]  # odstraneni posledich 15%
-
-        print("Délka dat pro testovaní po doplnění 15%: ", len(self.allTestDataForNN))
-
-        print("Délka dat pro trénování: ", len(self.allDataForNN))
 
 
-
-    # TASK 4 (testovaci listy atd)
-    def task_4(self):
-
-        #a = np.arange(10)
-        a = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        print("a: ", a)
-        dvojka = 3
-        beginning = int((len(a)/2))-int(dvojka)
-        b = a[beginning:(beginning+dvojka)]
-        a = a[0:beginning]+a[beginning+dvojka:len(a)]
-
-        print("a: ", a)
-        print("b: ", b)
-
-        # testovaci listy
-        # nahodne zamichani vsech dat
-        list1 = [1, 2, 3, 4, 5]
-        list2 = [1, 2, 3, 4, 5]
-        print(list1)
-        print(list2)
-        c = list(zip(list1, list2))
-        random.shuffle(c)
-        list1, list2 = zip(*c)
-        list1 = list(list1)
-        print(list1)
-        print(list2)
-        list1 = np.array(list1)
-        print(list1)
 
     # NASTAVI veskera data z jednoho souboru do vstupnich numpy poli do NN
     # todo - udelat funkci set_all_data_for_two_classes pro novy typ vstupniho souboru, kde jsou pouze dve tridy
@@ -607,108 +543,109 @@ class NNdata:
         self.allTestDataForNN = np.array(self.allTestDataForNN)
 
     # __________________________________________________________________________________________
-    # pro trenovaci vstupni data ->
+    # pro trenovaci/testovaci vstupni data ->
     # VYVAZOVANI TRID
     # odstraneni prebytecnych ramcu - tzn. pro kazdou tridu stejny pocet ramcu
     # data musi byt ve formatu PYTHON LIST
 
-    def balance_classes(self):
+    def balance_classes(self, features, labels):
         print("___________")
         print("Proběhne vyvažování tříd (funkce balance_classes)")
-        leftTraining = 0
-        rightTraining = 0
-        pauseTraining = 0
+        left = 0
+        right = 0
+        pause = 0
 
-        for label in self.allLabelsForNN:
+        for label in labels:
             if label[0] == 1:
-                leftTraining += 1
+                left += 1
             elif label[1] == 1:
-                rightTraining += 1
+                right += 1
             elif label[2] == 1:
-                pauseTraining += 1
+                pause += 1
 
-        print("Before reduce: left: ", leftTraining)
-        print("Before reduce: right: ", rightTraining)
-        print("Before reduce: pause: ", pauseTraining)
+        print("Before reduce: left: ", left)
+        print("Before reduce: right: ", right)
+        print("Before reduce: pause: ", pause)
 
         # odebrani right a pause
-        if leftTraining < rightTraining and leftTraining < pauseTraining:
-            print("nejmeně je leftTraining")
-            reduceRight = rightTraining - leftTraining
-            reducePause = pauseTraining - leftTraining
+        if left < right and left < pause:
+            print("nejmeně je left")
+            reduceRight = right - left
+            reducePause = pause - left
 
             i = 0
-            while i < len(self.allLabelsForNN):
-                if self.allLabelsForNN[i][1] == 1 and reduceRight != 0:
-                    del self.allLabelsForNN[i]
-                    del self.allDataForNN[i]
+            while i < len(labels):
+                if labels[i][1] == 1 and reduceRight != 0:
+                    del labels[i]
+                    del features[i]
                     reduceRight -= 1
                     i -= 1
-                elif self.allLabelsForNN[i][2] == 1 and reducePause != 0:
-                    del self.allLabelsForNN[i]
-                    del self.allDataForNN[i]
+                elif labels[i][2] == 1 and reducePause != 0:
+                    del labels[i]
+                    del features[i]
                     reducePause -= 1
                     i -= 1
                 i += 1
         # odebrani left a pause
-        elif rightTraining < leftTraining and rightTraining < pauseTraining:
+        elif right < left and right < pause:
 
-            reduceLeft = leftTraining - rightTraining
-            reducePause = pauseTraining - rightTraining
-            print("nejmeně je rightTraining")
+            reduceLeft = left - right
+            reducePause = pause - right
+            print("nejmeně je right")
             print("reduceLeft: ", reduceLeft)
             print("reducePause", reducePause)
             i = 0
-            while i < len(self.allLabelsForNN):
+            while i < len(labels):
                 # print( "i: ", i)
                 # print("allLabelsForNN[i] in while: ",allLabelsForNN[i])
-                if self.allLabelsForNN[i][0] == 1 and reduceLeft != 0:
+                if labels[i][0] == 1 and reduceLeft != 0:
                     # print("delete left")
-                    del self.allLabelsForNN[i]
-                    del self.allDataForNN[i]
+                    del labels[i]
+                    del features[i]
                     reduceLeft -= 1
                     i -= 1
-                elif self.allLabelsForNN[i][2] == 1 and reducePause != 0:
+                elif labels[i][2] == 1 and reducePause != 0:
                     # print("delete pause")
-                    del self.allLabelsForNN[i]
-                    del self.allDataForNN[i]
+                    del labels[i]
+                    del features[i]
                     reducePause -= 1
                     i -= 1
                 i += 1
         # odebrani left a right
-        elif pauseTraining < leftTraining and pauseTraining < rightTraining:
+        elif pause < left and pause < right:
 
-            print("nejmeně je pauseTraining")
-            reduceLeft = leftTraining - pauseTraining
-            reduceRight = rightTraining - pauseTraining
+            print("nejmeně je pause")
+            reduceLeft = left - pause
+            reduceRight = right - pause
 
             i = 0
-            while i < len(self.allLabelsForNN):
-                if self.allLabelsForNN[i][1] == 1 and reduceLeft != 0:
-                    del self.allLabelsForNN[i]
-                    del self.allDataForNN[i]
+            while i < len(labels):
+                if labels[i][1] == 1 and reduceLeft != 0:
+                    del labels[i]
+                    del features[i]
                     reduceLeft -= 1
                     i -= 1
-                elif self.allLabelsForNN[i][2] == 1 and reduceRight != 0:
-                    del self.allLabelsForNN[i]
-                    del self.allDataForNN[i]
+                elif labels[i][2] == 1 and reduceRight != 0:
+                    del labels[i]
+                    del features[i]
                     reduceLeft -= 1
                     i -= 1
                 i += 1
 
-        leftTraining = 0
-        rightTraining = 0
-        pauseTraining = 0
+        left = 0
+        right = 0
+        pause = 0
 
-        for label in self.allLabelsForNN:
+        for label in labels:
             if label[0] == 1:
-                leftTraining += 1
+                left += 1
             elif label[1] == 1:
-                rightTraining += 1
+                right += 1
             elif label[2] == 1:
-                pauseTraining += 1
+                pause += 1
 
-        print("After reduce: left: ", leftTraining)
-        print("After reduce: right: ", rightTraining)
-        print("After reduce: pause: ", pauseTraining)
+        print("After reduce: left: ", left)
+        print("After reduce: right: ", right)
+        print("After reduce: pause: ", pause)
 
+        return features, labels

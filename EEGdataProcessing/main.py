@@ -1,13 +1,10 @@
 # author: Petr Ullrich
 # VUT FIT - BP
-import  ChallengeClass
-import ChannelDataClass
+
 import NNdataClass
 import EEGstreamClass
 
-import json
 import numpy as np
-import random
 
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Activation
@@ -82,12 +79,15 @@ def predictions_three_classes():
 
     #acc = sum([np.argmax(NN.allTestLabelsForNN[i]) == np.argmax(predictions[i]) for i in range(len(predictions))]) / len(predictions)
 
-    print("Přesnost (accuracy): ", (correct / len(predictions)) * 100)
+    print("Přesnost (accuracy): ", round((correct / len(predictions)) * 100, 2),"\%")
     print("__________________")
     print("Počet správných predikcí: ", correct)
     print("Levá: ", leftCorrect, "z", left)
+    print("Levá v procentech: ", round((leftCorrect/left)*100, 2), "\%")
     print("Pravá: ", rightCorrect, "z", right)
-    print("Pauza: ", pauseCorrect, "z", pause)
+    print("Pravá v procentech: ", round((rightCorrect / right) * 100, 2), "\%")
+    print("Nic nedělání: ", pauseCorrect, "z", pause)
+    print("Nic nedělání v procentech: ", round((pauseCorrect / pause) * 100, 2), "\%")
     print("--------")
     print("Počet špatných predikcí: ", wrong, ", z toho:")
     print("Pravá místo levé: ", rightInsteadLeft)
@@ -145,7 +145,7 @@ def predictions_two_classes():
     print("špatně: ", wrong)
 
 
-#_____________________________________________________________________________________________________________________
+#_______________________________________________________________________________________________________________________
 # MAIN
 
 # instance tridy NNdata
@@ -155,12 +155,12 @@ NN = NNdataClass.NNdata()
 #________________________________________________________________
 # nastaveni potrebnych promennych tridy
 
-NN.channels = [1,2,3,5,6,7,8]
+NN.channels = [3,4]
 
 
 # STREAM instance
-EEGstream = EEGstreamClass.EEGstream()
-EEGstream.stream()
+#EEGstream = EEGstreamClass.EEGstream()
+#EEGstream.stream()
 
 # vybrani, kterou sadu challengi chceme trenovat:
 # prvni: delani cinnosti (do_it)
@@ -169,11 +169,13 @@ EEGstream.stream()
 
 NN.challengeSet = 'think_closed'
 
-NN.loadDataForNN = False
+NN.loadDataForNN = True
+
+
 
 NN.typeOfClasses = 1
-#NN.task_2('split_4')
-NN.task_1()
+#NN.task_2('split_5')
+NN.task_3()
 
 
 
@@ -223,12 +225,12 @@ print("______________________________")
 
 model = Sequential()
 model.add(Dense(80, activation='sigmoid', input_shape=(64*len(NN.channels),)))
-model.add(Dense(25, activation='sigmoid'))
+model.add(Dense(30, activation='sigmoid'))
 #model.add(Dense(300, activation='sigmoid'))
 #model.add(Dense(20, activation='sigmoid'))
 model.add(Dense(3, activation='softmax'))
 
-model.compile(optimizer='Adamax', loss='categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['accuracy'])
 model.fit(NN.allDataForNN, NN.allLabelsForNN, epochs=50, batch_size=32, validation_split=0.10)
 score = model.evaluate(NN.allTestDataForNN, NN.allTestLabelsForNN)
 predictions = model.predict(NN.allTestDataForNN)
