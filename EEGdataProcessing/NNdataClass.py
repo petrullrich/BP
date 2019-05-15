@@ -51,7 +51,7 @@ class NNdata:
         self.challengeSet = 'think_closed'
 
         # pokud jsou vstupni data do NN ze souboru -> loadDataForNN == True
-        self.loadDataForNN = True
+        self.loadDataForNN = False
         #_________________________________________________
         # TASKS
         #_________________________________________________
@@ -67,7 +67,6 @@ class NNdata:
         # typ rozdeleni trid
         # 1 - tri tridy: leva, prava, nic nedelani
         # 2 - dve tridy: cinnost (leva+prava), nic nedelani
-        # todo 3 - dve tridy: leva, prava
         self.typeOfClasses = 1
 
 
@@ -76,7 +75,7 @@ class NNdata:
     # pred predanim NN rozdelit v pomeru 85% trenovaci 15% testovaci
     def task_1(self):
 
-        print("Experiment 1")
+        print("Experiment 1 - rozdělení zamíchaných dat na 85% a 15%")
 
         if self.loadDataForNN == False:
 
@@ -110,14 +109,11 @@ class NNdata:
             # rozdeleni dat na trenovaci a testovaci
             print("Délka dat pro testovaní před doplněním 15%: ", len(self.allTestDataForNN))
             testingDataLen = int((len(self.allDataForNN)/100)*15)
-            print("15% ze všech dat je: ", testingDataLen)
-            print("Celkova delka dat: ", len(self.allDataForNN))
+
 
             # inicializace testovacich dat
             self.allTestDataForNN = self.allDataForNN[-testingDataLen:] # zkopirovani poslednich 15% dat
-            print("Délka dat pro testovaní po doplnění 15%: ", len(self.allTestDataForNN))
             self.allDataForNN = self.allDataForNN[0:-testingDataLen] #odstraneni posledich 15%
-            print("Délka dat pro trénování: ", len(self.allDataForNN))
 
             # inicializace testovacich dat
             self.allTestLabelsForNN = self.allLabelsForNN[-testingDataLen:] # zkopirovani poslednich 15% dat
@@ -244,7 +240,7 @@ class NNdata:
     # z kazde tridy vzit 15% - ty pouzit jako testovaci, zbytek jako trenovaci
     def task_3(self):
 
-        print("Experiment 3")
+        print("Experiment 3 - z každé třídy v každém souboru se vezme 15% na testování, zbytek jsou trénovací data")
 
         if self.loadDataForNN == False:
 
@@ -282,7 +278,6 @@ class NNdata:
             self.allTestLabelsForNN = np.load("data/tasks/task3/forNN/"+self.challengeSet+"/testLabelsForNN.npy")
 
     def percentage_from_each_challenge(self, perc):
-        print("funkce percetage..........")
         # f - file
         f = len(self.challengeEnd)-1
         while f >= 0:
@@ -295,10 +290,6 @@ class NNdata:
             c = len(self.challengeEnd[f])-1
             self.challengeEnd[f] = [0] + self.challengeEnd[f]
             while c >= 0:
-
-                #print(" PŘED  labely pro testování: ", self.allTestLabelsForNN)
-                #print(" PŘED  labely pro trénování: ", self.allLabelsForNN)
-                #print(" PŘED  Počet labelu pro trenování: ", len(self.allLabelsForNN))
 
                 testingDataLen = int(((self.challengeEnd[f][c+1] - self.challengeEnd[f][c])/100)*perc)
                 currPos = self.challengeEnd[f][c]
@@ -323,26 +314,14 @@ class NNdata:
                     self.allLabelsForNN = self.allLabelsForNN[0:(prefix + currPos)] + self.allLabelsForNN[prefix + currPos + testingDataLen:len(self.allLabelsForNN)]
 
 
-                #print(" POTOM labely pro testování: ", self.allTestLabelsForNN)
-                #print(" POTOM labely pro trénování: ", self.allLabelsForNN)
-                #print(" POTOM Počet labelu pro trenování: ", len(self.allLabelsForNN))
-
                 c -= 1
 
             f -= 1
-        print("Délka features po odebrání 15% z každé challenge: ", len(self.allDataForNN))
-        print("Délka testovacích features po přidání 15% z každé challenge: ", len(self.allTestDataForNN))
-
-        print("Délka labels po odebrání 15% z každé challenge: ", len(self.allLabelsForNN))
-        print("Délka testovacích labels po přidání 15% z každé challenge: ", len(self.allTestLabelsForNN))
 
 
 
 
     # NASTAVI veskera data z jednoho souboru do vstupnich numpy poli do NN
-    # todo - udelat funkci set_all_data_for_two_classes pro novy typ vstupniho souboru, kde jsou pouze dve tridy
-    # todo - nebude volat funkci get_challenge, ale novou funkci, ktera vrati stejne parametry ->
-    # todo - challengeAttributes
     def set_all_data(self, dataType, challengeSet, index):
 
         challengeNumbers = ['3','6'] # defaultní hodnota
@@ -419,9 +398,9 @@ class NNdata:
                         challengeTypeBinary[1] = 1
 
                 challengeType = ch + str(i)
-                print('____________________________________________')
-                print('ChallengeType: ', challengeType)
-                print('ChallengeTypeBinary: ', challengeTypeBinary)
+                #print('____________________________________________')
+                #print('ChallengeType: ', challengeType)
+                #print('ChallengeTypeBinary: ', challengeTypeBinary)
                 if dataType == 'training':
                     challengesAttributes = self.EEGlabels[index].get_challenge(challengeType, self.featuresTimestamps[index])  # ziskani ofsetu a delky dane challenge
 
@@ -460,12 +439,13 @@ class NNdata:
             self.EEGdata[index].removeDcOffset()  # filtr
             self.EEGdata[index].removeMainInterference()  # filtr
 
+        print("")
+        print("Probíhá zpracování trénovacích dat ...")
         # ----------------------------------------------------
         #                 LABELS - TRAINING
         # ----------------------------------------------------
 
         for index, lFilename in enumerate(self.lFilenames):
-            print("lFilename: ", lFilename)
             # instance tridy challengeClass
             self.EEGlabels.append(ChallengeClass.challenge(lFilename, self.lPath))
             # upraveni souboru s labely od Zdenka
@@ -473,17 +453,18 @@ class NNdata:
             # nacteni souboru s labely a doplneni tridni promenne chalenges
             self.EEGlabels[index].load_json_labels()
 
+
+
             # parametr index urcuje ktera instance tridy se prave zpracovava
             NNdata.set_all_data(self, 'training', self.challengeSet, index)
 
             # doplneni indexu koncu challengi pro danou isntanci (soubor)
             self.challengeEnd.append(self.EEGdata[index].challengeEnd)
 
-            # print("dataForNN: ", EEGdata[index].dataForNN)
+
             self.allDataForNN = self.allDataForNN + self.EEGdata[index].dataForNN
             self.allLabelsForNN = self.allLabelsForNN + self.EEGdata[index].labelsForNN
 
-        print("Len of allDataForNN: ", len(self.allDataForNN))
 
         # _________________________________________________________________
         # TESTING
@@ -496,8 +477,6 @@ class NNdata:
 
         # instance tridy channelDataClass
         for index, fFilename in enumerate(self.fTestFilenames):
-            print("index: ", index)
-            print("fTestFilename: ", fFilename)
             self.EEGtestData.append(ChannelDataClass.channelData(self.channels, fFilename, self.fTestPath))
             # upraveni souboru s features od Zdenka
             # EEGtestData[index].repairFeatures()
@@ -509,12 +488,13 @@ class NNdata:
             self.EEGtestData[index].removeDcOffset()  # filtr
             self.EEGtestData[index].removeMainInterference()  # filtr
 
+        print("")
+        print("Probíhá zpracování testovacích dat ...")
         # ----------------------------------------------------
         #                 LABELS - TESTING
         # ----------------------------------------------------
 
         for index, lFilename in enumerate(self.lTestFilenames):
-            print("lTestFilename: ", lFilename)
             # instance tridy challengeClass
             self.EEGTestlabels.append(ChallengeClass.challenge(lFilename, self.lTestPath))
             # upraveni souboru s labely od Zdenka
@@ -522,14 +502,14 @@ class NNdata:
             # nacteni souboru s labely a doplneni tridni promenne chalenges
             self.EEGTestlabels[index].load_json_labels()
 
+
+
             # parametr index urcuje ktera instance tridy se prave zpracovava
             NNdata.set_all_data(self, 'testing', self.challengeSet, index)
 
-            # print("dataForNN: ", EEGdata[index].dataForNN)
+
             self.allTestDataForNN = self.allTestDataForNN + self.EEGtestData[index].dataForNN
             self.allTestLabelsForNN = self.allTestLabelsForNN + self.EEGtestData[index].labelsForNN
-
-        print("Len of allTestDataForNN: ", len(self.allTestDataForNN))
 
 
     # prevedeni listu na numpy array, kvuli NN

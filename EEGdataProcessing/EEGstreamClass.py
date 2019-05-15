@@ -72,7 +72,9 @@ class EEGstream:
 
         # instance of class NNdata
         NNdataInstance = NNdataClass.NNdata()
-        self.channels = NNdataInstance.channels
+        #self.channels = NNdataInstance.channels
+
+
         print("Channels: ", self.channels)
         # stream settings
         EEG_stream = resolve_stream('type', 'EEG')
@@ -152,11 +154,8 @@ class EEGstream:
 
     def processEEGstream(self):
 
-        #print("Function processEEGstream")
-
         dataForNN = [[]]
         oneChannel = []
-        #print(self.samplesFrame)
 
         for i in self.channels:
             oneChannel = EEGstream.processFrame(self, self.samplesFrame[i-1])
@@ -164,9 +163,13 @@ class EEGstream:
 
 
         dataForNN = np.array(dataForNN)
-        #print(dataForNN)
 
-        predictions = self.model.predict(dataForNN)
+        try:
+            predictions = self.model.predict(dataForNN)
+        except:
+            print('Počet zadaných elektrod se liší od počtu požadovaných neuronovou sítí')
+            print('Prosím změňte elektrody pomocí parametru \"--channels\"')
+            exit(1)
 
         # vyhodnoceni presnosti
         if predictions[0][0] > predictions[0][1] and predictions[0][0] > predictions[0][2]:
@@ -237,6 +240,7 @@ class EEGstream:
 
         return yn
 
+    # filtr pasmova zadrz
     def onlineRemoveMainInterferenceHarmonic(self, xn, b, a, i):
 
         # diferencialni rovnice
@@ -274,8 +278,7 @@ class EEGstream:
         self.spec_PSDperBin = self.spec_PSDperHz * self.fs / float(self.NFFT)
 
     def spectrogram(self):
-        print("Generating spectrogram...")
-        f_lim_Hz = [0, 50]  # frequency limits for plotting
+        f_lim_Hz = [0, 50]
         plt.figure(figsize=(10, 5))
         ax = plt.subplot(1, 1, 1)
         plt.pcolor(self.spec_t, self.spec_freqs, 10 * np.log10(self.spec_PSDperBin))  # dB re: 1 uV
@@ -298,7 +301,6 @@ class EEGstream:
     # funkce pro vytvoreni grafu signal
     def signalplot(self):
         self.t_sec = np.arange(len(self.timestampsFrame))/self.fs
-        print("Generating signal plot...")
         plt.figure(figsize=(30, 5))
         plt.subplot(1, 1, 1)
         plt.plot(self.t_sec, self.samplesFrame[self.showChannel])

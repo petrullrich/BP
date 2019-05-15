@@ -30,7 +30,6 @@ class challenge:
 
         repairedLabels = repairedLabels[0:-1]
         repairedLabels = repairedLabels +']'
-        #print("repairedLabels: ", repairedLabels)
 
         with open(self.path+self.filename, "w") as write_file:
             write_file.write(repairedLabels)
@@ -82,7 +81,6 @@ class challenge:
                 else:
                     stage = 3
 
-                # print("Doba trvani tohoto useku: ", round(float(timestamp) - float(timestampChange)), " sekund")
                 # ----------------------------------------------------------------
                 # vytvoreni dict s id challenge + zacatky a konce danych challengi
 
@@ -91,32 +89,22 @@ class challenge:
                 if len(challengeRange[0]) != 2:
                     break
 
-                #print("Ch1: ", challenges)
-
                 # pokud klic neexistuje, vytvori se list pro dany klic
                 if not lastKey in challenges:
                     challenges[lastKey] = []
 
-                # print("ChallengeRange: ", challengeRange)
+
                 challenges[lastKey][len(challenges[lastKey]):] = copy.deepcopy(challengeRange)
-                # print("Ch2: ", challenges)
                 lastKey = str(values[0]) + str(values[1])
-                # print('Lastkey: ', lastKey)
                 challengeRange[0].pop(0)
-                # print("ChallengeRange2: ", challengeRange)
-                # print("Ch3: ", challenges)
-                #print(challenges)
                 # ----------------------------------------------------------------
 
                 timestampChange = timestamp
 
         # na konci je nutne doplnit rozsah posledni challenge
         challengeRange[0].append(lastTimestamp)
-        #print("CHall range: ",challengeRange)
-       # challenges[lastKey] = []
         challenges[lastKey][len(challenges[lastKey]):] = copy.deepcopy(challengeRange)
         self.challenges = challenges
-        print('Challenges: ', self.challenges)
 
     # vrati offset a delku pro kazdou konkretni challenge v ramci sady challengi
     def get_challenge(self, challengeType, featuresTimestamps):
@@ -154,22 +142,13 @@ class challenge:
 
                 # pokud existuje pocatecni timestamp pro danou challenge, ale koncovy ne, doplni se jako koncovy posledni timestamp
                 if len(challengeAttributes) == 1:
-                    #print('Celkovy pocet timestampu (features): ', len(featuresTimestamps))
-                    #print('Offset: ', challengeAttributes[0])
                     challengeAttributes.append(len(featuresTimestamps) - challengeAttributes[0])
 
                 challengesAttributes.append(copy.deepcopy(challengeAttributes))
-                # print("OFFSET AND LENGTH: ",challengeAttributes)
                 challengeNumber += 1
-
-            #print('timestamp 0: ', featuresTimestamps[0])
-            #print('timestamp 0+824: ', featuresTimestamps[0 + 824])
-            #print('timestamp 3813: ', featuresTimestamps[3813])
-            #print('timestamp 3813+1109: ', featuresTimestamps[3813+1109])
-            print("ChallengesAttributes: ", challengesAttributes)
 
             return challengesAttributes
 
         except KeyError:
-            print('Pro tuto sadu challengi neexistuji data')
+            print('Pro tuto sadu tříd neexistují data')
             exit(0)

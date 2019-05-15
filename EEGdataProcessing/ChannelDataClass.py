@@ -108,12 +108,6 @@ class channelData:
 
             self.data.append(data)
 
-        #print("In load_json_features, self.data: ", self.data[0][0])
-        #print(self.timestamps)
-       # print(*self.data, sep = "\n")
-        print("Třídní proměnná \"data\" naplněna")
-        print("Počet kanálů (délka proměnné data): ", len(self.data))
-
 
     # horni propust - filtrovani spodniho 1 Hz
     def removeDcOffset(self):
@@ -133,7 +127,6 @@ class channelData:
             b, a = signal.butter(3, (bandstopHz/(self.fs/2.0)), 'bandstop')
             # axis=1   -> provede se pro vsechna pole (channely)
             self.data = signal.lfilter(b, a, self.data, axis=1)
-            #print("Data after bandstop: ", self.data)
         print("Na data byl aplikován filtr pasmová zádrž (",hzRange, " Hz )")
 
     # challengesAttributes - list listu -> prvni hodnota je offset od zacatku dat, druha hodnota je delka challenge
@@ -154,72 +147,29 @@ class channelData:
 
                 for channelNumber in range(channelsCount):
                     # inicializace konkretniho ramce
-                    #print("len of self.data: ", len(self.data[channelNumber]))
-                    #print("self.data: (currPos)", self.data[channelNumber][currentPosition])
-                    #print("self.data: (currPos+frameLength)", self.data[channelNumber][currentPosition])
-
 
                     dataInFrame = self.data[channelNumber][currentPosition : (currentPosition+self.frameLength)]
-                    #print("dataInFrame: ", dataInFrame)
+
                     # zpracovani konkretniho ramce na konkretnim kanalu
                     dataInFrame = channelData.processFrame(self, dataInFrame)
                     allChannelsDataInFrame = allChannelsDataInFrame + dataInFrame
-                    #print('allChannelsDataInFrame(before np): ', allChannelsDataInFrame)
-                    #allChannelsDataInFrame = np.array(allChannelsDataInFrame)
-                    #print('allChannelsDataInFrame(after np): ', allChannelsDataInFrame)
 
-                # TODO - při doplňování vstupních dat pro NN dávat do jednoho pole namísto jednoho rámce TŘI RÁMCE tzn.
-                # TODO - k současnému jednomu rámci přilepit následující dva
-                # TODO - původní ↓
-                # TODO - [ [64 * počet kanálů ] , [64 * počet kanálů ], [64 * počet kanálů ], [64 * počet kanálů ], ...]
-                # TODO - vylepšení ↓
-                # TODO - [ [64 * počet kanálů.64 * počet kanálů.64 * počet kanálů], [64 * počet kanálů.64 * počet kanálů.64 * počet kanálů]
 
-                #if framesCounter < 3:
-                #    setOfThreeFrames = setOfThreeFrames + allChannelsDataInFrame
-                #    framesCounter += 1
-                #else:
-                    #print("Delka setOfThreeFrames: ", len(setOfThreeFrames))
-                    # vynulovani counteru
-                    #framesCounter = 0
-
-                    # doplneni vstupnich dat pro NN
+                # doplneni vstupnich dat pro NN
                 self.dataForNN.append(copy.deepcopy(allChannelsDataInFrame))
-                    # nove doplneni tri ramcu v jednom poli namisto jednoho
-                    #self.dataForNN.append(copy.deepcopy(setOfThreeFrames))
 
                 self.labelsForNN.append(copy.deepcopy(challengeType))
 
-                    # vynulovani listu, kde jsou umistejny 3 ramce
-                    #setOfThreeFrames = []
-
-
-                #print('allChannelsDataInFrame: ', allChannelsDataInFrame)
-                #print(len(allChannelsDataInFrame))
-
                 currentPosition += self.frameShift  # posunuti framu o shift
 
-            #print("dataForNN", self.dataForNN)
-            #print(*self.dataForNN, sep="\n")
 
-            #print("Delka promenne dataForNN: ", len(self.dataForNN))
-            #print("labelsForNN: ", self.labelsForNN)
-            #print("Delka promenne labelsForNN: ", len(self.labelsForNN))
-
-        #print("Index konce challenge v listu dataForNN: ", len(self.dataForNN))
         self.challengeEnd.append(len(self.dataForNN))
 
     # zpracovani daneho ramce:
     # fourierova transformace -> zahozeni druhe poloviny dat -> absolutni hodnota
     # vraci jiz upraveny ramec
     def processFrame(self, dataInFrame):
-        #print("Delka dat: ", len(dataInFrame))
-        #print('Before FFT: ', dataInFrame)
         dataInFrame = np.fft.fft(dataInFrame) # FFT
-        #print("Delka dat: ", len(dataInFrame))
-        #print('After FFT: ', dataInFrame)
         dataInFrame = dataInFrame[0 : int(self.frameLength/2)] # potrebujeme pouze prvni polovinu hodnot - argumenty zahodime
         dataInFrame = list(map(abs, dataInFrame)) # kazde cislo prevedeno na absolutni hodnotu
-        #print("Delka dat: ", len(dataInFrame))
-        #print('AFTER ABS: ', dataInFrame)
         return dataInFrame
