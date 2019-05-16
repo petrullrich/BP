@@ -88,13 +88,13 @@ def predictions_three_classes():
     print("--------")
     print("Počet špatných predikcí: ", wrong, ", z toho:")
     print("Pravá místo levé: ", rightInsteadLeft)
-    print("Pauza místo levé: ", pauseInsteadLeft)
+    print("Nic nedělání místo levé: ", pauseInsteadLeft)
     print("")
     print("Levá místo pravé: ", leftInsteadRight)
-    print("Pauza místo pravé: ", pauseInsteadRight)
+    print("Nic nedělání místo pravé: ", pauseInsteadRight)
     print("")
-    print("Levá místo pauzy: ", leftInsteadPause)
-    print("Pravá místo pauzy: ", rightInsteadPause)
+    print("Levá místo nic nedělání: ", leftInsteadPause)
+    print("Pravá místo nic nedělání: ", rightInsteadPause)
 
 def predictions_two_classes():
     # ----------------------------------------------
@@ -134,7 +134,7 @@ def predictions_two_classes():
 
     print("correct: ", correct)
     print("činnost: ", doCorrect, "z", do)
-    print("pauza: ", pauseCorrect, "z", pause)
+    print("nice nedělání: ", pauseCorrect, "z", pause)
     print("acc from predict: ", (correct / len(predictions)) * 100)
     print("špatně: ", wrong)
 
@@ -144,18 +144,19 @@ def predictions_two_classes():
 
 # instance tridy NNdata
 NN = NNdataClass.NNdata()
-
+epochs = 50
 # _________________________________________________________
 # PARSE ARGUMENTS
 
 parser = argparse.ArgumentParser()
 # jaky experiment bude vybran pro rozdeleni
 parser.add_argument('-l', '--load', help='Načtení dat připravených pro klasifikaci ze souborů (pokud existují) nebo jejich vytvoření ze vstupních dat (true, false)')
-parser.add_argument('-cs', '--class_set', help='Veberte sadu tříd, kterou chcete klasifikovat (think_open, think_closed, do_it) ... defaultně think_closed')
+parser.add_argument('-c', '--class_set', help='Veberte sadu tříd, kterou chcete klasifikovat (think_open, think_closed, do_it) ... defaultně think_closed')
 parser.add_argument('-ch', '--channels', help='Zadejte čísla elektrod, které chcete zpracovávat (1-8)', nargs='*')
-parser.add_argument('-e', '--experiment', help='Zvolte číslo experimentu/rozdělení (1, 2, 3)')
-parser.add_argument('-s', '--split', help='Pokud je zvolen experiment 2, vyberte jeho konkrétní rozdělení (1, 2, 3, 4, 5)')
-parser.add_argument('-st', '--stream', help='Pro zapnutí real_time zpracování dat: true, musí již existovat natrénovaný model neuronové sítě')
+parser.add_argument('-e', '--experiment', help='Zvolte číslo experimentu/rozdělení (1, 2, 3)',  type=int)
+parser.add_argument('-s', '--split', help='Pokud je zvolen experiment 2, vyberte jeho konkrétní rozdělení (1, 2, 3, 4, 5)',  type=int)
+parser.add_argument('-r', '--stream', help='Pro zapnutí real_time zpracování dat: true, musí již existovat natrénovaný model neuronové sítě')
+parser.add_argument('-p', '--epochs', help='Zadejte počet epoch neuronové sítě', type=int)
 
 
 args = vars(parser.parse_args())
@@ -213,70 +214,54 @@ elif args['class_set'] == 'think_closed':
 elif args['class_set'] == 'do_it':
         NN.challengeSet = 'do_it'
 
+
+# ARG PRO EPOCHY
+if args['epochs']:
+    epochs = args['epochs']
+
 # ARG PRO EXPERIMENTY A SPLITY
-if args['experiment'] == '1':
+if args['experiment'] == 1:
     print("Experiment 1")
     print("Zpracovávané elektrody: ", NN.channels)
     NN.task_1()
 
-elif args['experiment'] == '2':
+elif args['experiment'] == 2:
 
-    if args['split'] == '1':
+    if args['split'] == 1:
         print("Experiment 2, rozdělení 1")
         NN.task_2('split_1')
-    elif args['split'] == '2':
+    elif args['split'] == 2:
         print("Experiment 2, rozdělení 2")
         NN.task_2('split_2')
-    elif args['split'] == '3':
+    elif args['split'] == 3:
         print("Experiment 2, rozdělení 3")
         NN.task_2('split_3')
-    elif args['split'] == '4':
+    elif args['split'] == 4:
         print("Experiment 2, rozdělení 4")
         NN.task_2('split_4')
-    elif args['split'] == '5':
+    elif args['split'] == 5:
         print("Experiment 2, rozdělení 5")
         NN.task_2('split_5')
     else:
-        print("Je špatně určen parametr \"--split\" nebo není určen vůbec.")
-        exit(1)
+        NN.task_2('split_1')
 
-elif args['experiment'] == '3':
+elif args['experiment'] == 3:
     print("Experiment 3")
     NN.task_3()
+
+else:
+    NN.task_1()
+
 
 # END OF PARSING
 # _________________________________________________________
 
 
-
-
-#________________________________________________________________
-# nastaveni potrebnych promennych tridy
-
-#NN.channels = [1,2,3,4,5,6,7,8]
-
-
-# STREAM instance
-#EEGstream = EEGstreamClass.EEGstream()
-#EEGstream.stream()
-
-# vybrani, kterou sadu challengi chceme trenovat:
-# prvni: delani cinnosti (do_it)
-# druha: mysleni s otevrenyma ocima (think_open)
-# treti: mysleni se zavrenyma ocima (think_closed)
-
-NN.challengeSet = 'think_closed'
-
-NN.loadDataForNN = False
-#NN.task_1()
-
-#NN.task_2('split_5')
-#NN.task_1()
-
-
 if len(NN.allTestDataForNN) == 0:
     print("Neexistují data pro zpracování!")
     exit(1)
+
+
 
 leftTraining = 0
 rightTraining = 0
@@ -317,32 +302,32 @@ print("______________________________")
 # keras model
 
 
-
-#np.random.seed(7)
-
 model = Sequential()
-model.add(Dense(80, activation='sigmoid', input_shape=(64*len(NN.channels),)))
+
+if NN.loadDataForNN is True:
+    print("shape = ", len(NN.allDataForNN[0]))
+    model.add(Dense(80, activation='sigmoid', input_shape=(len(NN.allDataForNN[0]),)))
+else:
+    model.add(Dense(80, activation='sigmoid', input_shape=(64*len(NN.channels),)))
+
 model.add(Dense(30, activation='sigmoid'))
 model.add(Dense(3, activation='softmax'))
 
 model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['accuracy'])
-model.fit(NN.allDataForNN, NN.allLabelsForNN, epochs=50, batch_size=32, validation_split=0.10)
+model.fit(NN.allDataForNN, NN.allLabelsForNN, epochs=epochs, batch_size=32, validation_split=0.10)
 score = model.evaluate(NN.allTestDataForNN, NN.allTestLabelsForNN)
 predictions = model.predict(NN.allTestDataForNN)
 
 # ----------------------------------------------
 # vyhodnoceni presnosti
-print(model.metrics_names[1], score[1])
-print(model.metrics_names[0], score[0])
+#print(model.metrics_names[1], score[1])
+#print(model.metrics_names[0], score[0])
 
 predictions_three_classes()
 
 
 # ulozeni
 model.save('data/kerasModels/firstModel.h5')
-#del model
-
-#model = load_model('data/kerasModels/firstModel.h5')
 
 
 

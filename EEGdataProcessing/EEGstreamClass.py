@@ -54,7 +54,7 @@ class EEGstream:
         #_______________________________________
         # FILTRY - INIT
 
-        hzCutOff = 5.0
+        hzCutOff = 3.0
         b, a = signal.butter(3, (hzCutOff / (self.fs / 2.0)), 'highpass')
         #print("b: ", b, "a: ", a)
 
@@ -281,7 +281,7 @@ class EEGstream:
         f_lim_Hz = [0, 50]
         plt.figure(figsize=(10, 5))
         ax = plt.subplot(1, 1, 1)
-        plt.pcolor(self.spec_t, self.spec_freqs, 10 * np.log10(self.spec_PSDperBin))  # dB re: 1 uV
+        plt.pcolor(self.spec_t, self.spec_freqs, 10 * np.log10(self.spec_PSDperBin))
         plt.clim([-25, 26])
         plt.xlim(self.spec_t[0], self.spec_t[-1])
         plt.ylim(f_lim_Hz)
